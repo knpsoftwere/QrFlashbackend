@@ -36,7 +36,5 @@ tasks.named('test') {
 }
 
 bootJar {
-	mainClass = 'org.qrflash.qrflashbackend.QrFlashBackendApplication' // Замість цього вкажіть реальний шлях до вашого головного класу
+	mainClass = 'org.qrflash.qrflashbackend.QrFlashBackendApplication'
 }
-
-
