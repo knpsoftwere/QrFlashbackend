@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UpdateController {
     @GetMapping("/contrl")
     public String updateCheck() {
-        return "loadsasdsadasdawsfawewaf";
+        return "boshe upasi";
     }
 }
