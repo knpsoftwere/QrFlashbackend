@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
     @GetMapping("/health")
     public String healthCheck() {
-        return "Application is running!";
+        return "Appdate application fun git request!";
     }
 }
