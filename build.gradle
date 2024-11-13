@@ -36,5 +36,5 @@ tasks.named('test') {
 }
 
 bootJar {
-	mainClass = 'org.qrflash.qrflashbackend.QrFlashBackendApplication'
+	mainClass = 'org.qrflash.QrFlashBackendApplication'
 }
