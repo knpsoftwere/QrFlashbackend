@@ -2,6 +2,7 @@ package org.qrflash.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
@@ -17,6 +18,7 @@ public class SecurityConfig{
         http
                 .csrf().disable() // Вимикаємо CSRF для простоти
                 .authorizeHttpRequests()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/auth/register", "/auth/login").permitAll() // Дозволяємо доступ до реєстрації та логіну без авторизації
                 .anyRequest().authenticated() // Вимагаємо аутентифікацію для інших маршрутів
                 .and()
