@@ -16,7 +16,6 @@ public class SecurityConfig{
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable() // Вимикаємо CSRF для простоти
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/auth/register", "/auth/login").permitAll() // Дозволяємо доступ до реєстрації та логіну без авторизації
