@@ -19,14 +19,15 @@ public class UserService {
 
     public void registerUser(String phoneNumber, String password) {
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new IllegalArgumentException("Користувач з таким номером вже існує");
+            throw new IllegalArgumentException("Користувач за таким номером вже існує");
         }
 
         UserEntity user = new UserEntity();
         user.setPhoneNumber(phoneNumber);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPasswordHash(passwordEncoder.encode(password)); // Використовуємо passwordHash
         userRepository.save(user);
     }
+
 
     public UserEntity findByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)

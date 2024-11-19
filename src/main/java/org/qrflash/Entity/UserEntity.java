@@ -12,7 +12,8 @@ public class UserEntity {
     private Long id;
 
     private String phoneNumber;
-    private String password;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
     private String salt;
     private Boolean isActive;
     private java.sql.Timestamp lastLogin;
