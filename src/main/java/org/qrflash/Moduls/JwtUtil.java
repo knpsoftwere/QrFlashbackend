@@ -12,49 +12,23 @@ import java.util.UUID;
 @Component()
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final String SECRET_KEY = "your_secret_key";
 
-    public String generateToken(Long userId) {
+    public String generateToken(String username) {
         return Jwts.builder()
-//                Унікальний ID токена
-                .setId(UUID.randomUUID().toString())
-//                Айді користувача
-                .setSubject(String.valueOf(userId))
-//               Дата створення токена
+                .setSubject(username)
                 .setIssuedAt(new Date())
-//               Термін дії токена (10 днів)
-                .setExpiration(new Date(System.currentTimeMillis() + 864_000_000))
-//               Алгоритс підпису HS512 і підписується секретним ключем
-                .signWith(SignatureAlgorithm.HS512, secret + generateSalt())
-                .compact();
-    }
-//    Отримуємо дату закінчення терміну токена
-    public Date getExpirationDate(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret + generateSalt())
-//               Розбиває отриманий токен підтягнутим ключем
-                .parseClaimsJws(token)
-//                Отримує дату закінчення токену
-                .getBody();
-        return claims.getExpiration();
-    }
-
-//    Аналогічна генерація токену але вже на 30 днів
-    public String generateRefreshToken(Long userId) {
-        return Jwts.builder()
-                .setId(UUID.randomUUID().toString())
-                .setSubject(String.valueOf(userId))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)) // 30 днів
-                .signWith(SignatureAlgorithm.HS512, secret + generateSalt())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 годин
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
 
-    private String generateSalt() {
-//        Генерація salt, простий варіант
-        return UUID.randomUUID().toString().replace("-","");
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
-
-
 }

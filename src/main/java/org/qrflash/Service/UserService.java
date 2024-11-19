@@ -1,62 +1,35 @@
 package org.qrflash.Service;
 
+import lombok.RequiredArgsConstructor;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    @Qualifier("securityPasswordEncoder")
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserEntity registerUser(String phoneNumber, String password) {
-        Optional<UserEntity> existingUser = userRepository.findByPhoneNumber(phoneNumber);
-        if(existingUser.isPresent()) {
-            throw new RuntimeException("Користувач за цим номером вже існує");
+    public void registerUser(String phoneNumber, String password) {
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new IllegalArgumentException("Користувач з таким номером вже існує");
         }
 
-        UserEntity userEntity = new UserEntity();
-        userEntity.setPhoneNumber(phoneNumber);
-
-        // Генеруємо salt і зберігаємо його окремо
-        String salt = passwordEncoder.encode(phoneNumber + System.currentTimeMillis()); // унікальний salt
-        userEntity.setSalt(salt);
-
-        // Генеруємо хеш пароля з доданим salt
-        String passwordHash = passwordEncoder.encode(password + salt);
-        userEntity.setPasswordHash(passwordHash);
-
-        System.out.println("Збережений salt: " + salt);
-        System.out.println("Збережений хеш пароля: " + passwordHash);
-
-        return userRepository.save(userEntity);
+        UserEntity user = new UserEntity();
+        user.setPhoneNumber(phoneNumber);
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
     }
 
-    public UserEntity authenticateUser(String phoneNumber, String password) {
-        UserEntity userEntity = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new RuntimeException("Користувача не знайдено"));
-
-        // Використовуємо збережений salt для хешування введеного пароля
-        String hashedPassword = passwordEncoder.encode(password + userEntity.getSalt());
-
-        // Порівнюємо збережений хеш із хешем введеного пароля
-        if (!passwordEncoder.matches(password + userEntity.getSalt(), userEntity.getPasswordHash())) {
-            throw new RuntimeException("Не правильний пароль");
-        }
-
-
-        System.out.println("Salt користувача: " + userEntity.getSalt());
-        System.out.println("Хеш для перевірки логіну: " + hashedPassword);
-
-        return userEntity;
+    public UserEntity findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new UsernameNotFoundException("Користувач не знайдений"));
     }
-
 }

@@ -12,7 +12,7 @@ public class UserEntity {
     private Long id;
 
     private String phoneNumber;
-    private String passwordHash;
+    private String password;
     private String salt;
     private Boolean isActive;
     private java.sql.Timestamp lastLogin;
