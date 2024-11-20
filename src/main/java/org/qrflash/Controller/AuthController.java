@@ -30,6 +30,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
         try {
             String token = authenticationService.authenticateUser(request);
+            System.out.println("Generate token" + token);
             return ResponseEntity.ok(new JwtResponse(token));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
