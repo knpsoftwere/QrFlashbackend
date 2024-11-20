@@ -6,12 +6,10 @@ import org.qrflash.DTO.UserLoginRequest;
 import org.qrflash.DTO.UserRegistrationRequest;
 import org.qrflash.Service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "https://qrflash.online:443")
 @RequestMapping("/auth")
 @RequiredArgsConstructor // Lombok анотація для автоматичного створення конструктора
 public class AuthController {
