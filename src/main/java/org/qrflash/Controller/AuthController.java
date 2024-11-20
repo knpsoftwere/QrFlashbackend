@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "https://qrflash.online:443")
+@CrossOrigin(origins = "https://qrflash.online", allowCredentials = "true")
 @RequestMapping("/auth")
 @RequiredArgsConstructor // Lombok анотація для автоматичного створення конструктора
 public class AuthController {
