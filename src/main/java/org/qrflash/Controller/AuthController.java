@@ -7,14 +7,12 @@ import org.qrflash.DTO.UserRegistrationRequest;
 import org.qrflash.Service.AuthenticationService;
 import org.qrflash.Service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
     private final UserService userService;
     private final AuthenticationService authenticationService;
