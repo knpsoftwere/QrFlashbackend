@@ -47,7 +47,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("https://example.com"); // Додайте ваші дозволені домени
+        configuration.addAllowedOrigin("https://api.qrflash.online"); // Додайте ваші дозволені домени
         configuration.addAllowedMethod("*"); // Дозволені методи (GET, POST тощо)
         configuration.addAllowedHeader("*"); // Дозволені заголовки
         configuration.setAllowCredentials(true);
