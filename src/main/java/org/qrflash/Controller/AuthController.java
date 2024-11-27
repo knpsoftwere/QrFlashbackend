@@ -5,36 +5,37 @@ import org.qrflash.DTO.JwtResponse;
 import org.qrflash.DTO.UserLoginRequest;
 import org.qrflash.DTO.UserRegistrationRequest;
 import org.qrflash.Service.AuthenticationService;
+import org.qrflash.Service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@CrossOrigin(origins = "https://qrflash.online", allowCredentials = "true")
 @RequestMapping("/auth")
-@RequiredArgsConstructor // Lombok анотація для автоматичного створення конструктора
+@RequiredArgsConstructor
 public class AuthController {
-
+    private final UserService userService;
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
-        try {
-            authenticationService.registerUser(request);
+    public ResponseEntity<String> register (@RequestBody UserRegistrationRequest request){
+        try{
+            userService.registerUser(request.getPhoneNumber(), request.getPassword());
             return ResponseEntity.ok("Користувач успішно зареєстрований");
-        } catch (Exception e) {
+        }catch (IllegalArgumentException e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
-        try {
-            String token = authenticationService.authenticateUser(request);
-            System.out.println("Generate token" + token);
+    public ResponseEntity<?>login(@RequestBody UserLoginRequest request){
+        try{
+            String token = authenticationService.authenticateUser(request.getPhoneNumber(), request.getPassword());
             return ResponseEntity.ok(new JwtResponse(token));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Помилка авторизації: " + e.getMessage());
         }
     }
 }
-
