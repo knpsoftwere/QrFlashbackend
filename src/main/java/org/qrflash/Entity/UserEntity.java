@@ -15,7 +15,7 @@ public class UserEntity {
     private String phoneNumber;
 
     @Column(nullable = false)
-    private String passwordHash;
+    private String password;
 
     @Column
     private Boolean isActive = true;
