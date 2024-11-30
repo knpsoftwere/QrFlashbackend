@@ -3,6 +3,8 @@ package org.qrflash.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Set;
+
 @Entity
 @Table(name="users")
 @Data
@@ -19,4 +21,7 @@ public class UserEntity {
 
     @Column
     private Boolean isActive = true;
+
+    @ManyToMany(mappedBy = "admins")
+    private Set<EstablishmentsEntity> establishments;
 }

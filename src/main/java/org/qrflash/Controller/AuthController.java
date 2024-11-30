@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.*;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.JWT.JwtUtil;
+import org.qrflash.Repository.EstablishmentsRepository;
+import org.qrflash.Service.EstablishmentsService;
 import org.qrflash.Service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +19,15 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin
+@CrossOrigin(origins = "https://qrflash.online")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final EstablishmentsRepository establishmentsRepository;
+    private final EstablishmentsService establishmentsService;
 
 
     @PostMapping("/register")
@@ -38,11 +42,16 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(registrationUserDTO.getPassword()));
         userService.createNewUser(user);
         String token = jwtUtil.generateToken(registrationUserDTO.getPhoneNumber());
+
+        System.out.println("Повинна створитись таблиця!");
+        establishmentsService.checkAndCreateEstablishment(user.getId());
+
+
         return ResponseEntity.ok(new JwtResponse(token));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?>create(@RequestBody JwtRequest request){
+    public ResponseEntity<?>auth(@RequestBody JwtRequest request){
         try{
             System.out.println("Авторизація: " + request.getPhoneNumber());
             authenticationManager.authenticate(

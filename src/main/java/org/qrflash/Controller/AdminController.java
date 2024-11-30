@@ -3,11 +3,13 @@ package org.qrflash.Controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "https://qrflash.online")
 @RequiredArgsConstructor
+@RequestMapping("/Admin")
 public class AdminController {
 
     @GetMapping("/unsecured")
@@ -15,7 +17,7 @@ public class AdminController {
         return "unsecured data";
     }
 
-    @GetMapping("/serured")
+    @GetMapping("/admin")
     public String serured() {
         return "serured data";
     }
