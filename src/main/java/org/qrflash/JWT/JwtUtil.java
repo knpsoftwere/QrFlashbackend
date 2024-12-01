@@ -1,8 +1,6 @@
 package org.qrflash.JWT;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -27,5 +25,21 @@ public class JwtUtil {
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
+
+    public boolean isValidToken(String token) {
+        try {
+            // Перевірка, чи токен є дійсним
+            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            System.err.println("Токен протерміновано: " + e.getMessage());
+        } catch (SignatureException e) {
+            System.err.println("Невірний підпис токена: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Помилка під час перевірки токена: " + e.getMessage());
+        }
+        return false;
+    }
+
 
 }

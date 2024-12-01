@@ -7,6 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name="establishments")
@@ -15,7 +16,7 @@ public class EstablishmentsEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @UuidGenerator
-    private String uuid;
+    private UUID uuid;
 
     @Column(nullable = false)
     private String name;
@@ -23,7 +24,7 @@ public class EstablishmentsEntity {
     @Column(nullable = false)
     private LocalDateTime created_at;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "establishment_admins",
             joinColumns = @JoinColumn(name = "establishment_id"),

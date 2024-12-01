@@ -2,6 +2,7 @@ package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.*;
+import org.qrflash.Entity.EstablishmentsEntity;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.JWT.JwtUtil;
 import org.qrflash.Repository.EstablishmentsRepository;
@@ -13,9 +14,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import javax.xml.crypto.Data;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,22 +34,37 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> createNewUser (@RequestBody RegistrationUserDTO registrationUserDTO) {
+        //Перевірна, чи існує користувач із таким номером телефону
         if(userService.findByPhone(registrationUserDTO.getPhoneNumber()).isPresent()){
-            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(), "Користувач з таким іменем вже існує"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),
+                    "Користувач з таким іменем вже існує"),
+                    HttpStatus.BAD_REQUEST);
         }
-
+        //Створення нового користувача
         UserEntity user = new UserEntity();
-
         user.setPhoneNumber(registrationUserDTO.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(registrationUserDTO.getPassword()));
         userService.createNewUser(user);
+
+        //Генерація токена
         String token = jwtUtil.generateToken(registrationUserDTO.getPhoneNumber());
 
-        System.out.println("Повинна створитись таблиця!");
-        establishmentsService.checkAndCreateEstablishment(user.getId());
-
-
-        return ResponseEntity.ok(new JwtResponse(token));
+        //Створення бази даних (закладу) для нового користувача
+        String establishmentUuid;
+        try{
+            System.out.println(getCurrentTimestamp() + " - Створюється база данних для користувача...");
+            EstablishmentsEntity establishment = establishmentsService.createEstablishmentForUser(user.getId());
+            establishmentUuid = establishment.getUuid().toString();
+            System.out.println(getCurrentTimestamp() +" - База успішно створення");
+        }catch (Exception e){
+            System.err.println(getCurrentTimestamp() +" - Помилка створення бази даних");
+            return new ResponseEntity<>(
+                    new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Не вдалося створити базу даних для закладу"),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        JwtResponse response = new JwtResponse(token, establishmentUuid);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -64,6 +81,15 @@ public class AuthController {
         }
         UserDetails userDetails = userService.loadUserByUsername(request.getPhoneNumber());
         String token = jwtUtil.generateToken(userDetails.getUsername());
-        return ResponseEntity.ok(new JwtResponse(token));
+
+        String establishmentUuid = establishmentsService.getEstablishmentUuidForUser(request.getPhoneNumber());
+
+        JwtResponse response = new JwtResponse(token, establishmentUuid);
+        return ResponseEntity.ok(response);
+    }
+
+    //Метод для отримання поточного часу
+    private String getCurrentTimestamp() {
+        return java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

@@ -19,6 +19,14 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
+    @ManyToMany
+    @JoinTable(
+            name = "establishment_admins",
+            joinColumns = @JoinColumn(name = "establishment_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<UserEntity> admins;
+
     @Column
     private Boolean isActive = true;
 
