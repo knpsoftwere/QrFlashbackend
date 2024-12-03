@@ -24,7 +24,7 @@ public class AdminController {
     }
 
     @GetMapping("/menu")
-    public ResponseEntity<?> getMenuItems(@RequestParam("establishmentId") String establishmentId,
+    public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") String establishmentId,
                                           @RequestHeader("Authorization") String token) {
         try {
             UUID formattedUuid = formatUUID(establishmentId);

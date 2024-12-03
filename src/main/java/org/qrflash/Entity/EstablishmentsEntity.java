@@ -24,7 +24,7 @@ public class EstablishmentsEntity {
     @Column(nullable = false)
     private LocalDateTime created_at;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "establishment_admins",
             joinColumns = @JoinColumn(name = "establishment_id"),
