@@ -71,4 +71,9 @@ public class MenuItemsService {
         System.out.println("Menu item added to table in database: " + databaseName);
     }
 
+    public void deleteMenuItem(UUID establishmentId, Long itemId, String token) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        dynamicDatabaseService.deleteMenuItems(databaseName, itemId);
+    }
+
 }

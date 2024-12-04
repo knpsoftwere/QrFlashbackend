@@ -1,6 +1,7 @@
 package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.connector.Response;
 import org.qrflash.DTO.AppError;
 import org.qrflash.Entity.MenuItemEntity;
 import org.qrflash.Service.MenuItemsService;
@@ -54,5 +55,15 @@ public class AdminController {
                                          @RequestHeader("Authorization") String token) {
         menuItemsService.createMenuItem(establishmentId, menuItemEntity);
         return ResponseEntity.ok("Menu item created");
+    }
+
+    @DeleteMapping("/menu/items/{id}")
+    public ResponseEntity<?> deleteMenuItem(
+            @PathVariable Long id,
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestHeader("Authorization") String token) {
+        menuItemsService.deleteMenuItem(establishmentId, id, token);
+
+        return ResponseEntity.ok("Menu item deleted successfully");
     }
 }

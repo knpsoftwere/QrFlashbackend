@@ -78,4 +78,26 @@ public class DynamicDatabaseService {
             throw new RuntimeException("Failed to save menu item to database: " + databaseName, e);
         }
     }
+
+    public void deleteMenuItems(String databaseName, Long itemId) {
+        // SQL-запит без вказання імені бази
+        String sql = "DELETE FROM menu_items WHERE id = ?";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            // Встановлюємо параметр ID
+            preparedStatement.setLong(1, itemId);
+
+            // Виконуємо запит
+            int rowsAffected = preparedStatement.executeUpdate();
+            System.out.println("Deleted " + rowsAffected + " row(s) with ID " + itemId + " from database: " + databaseName);
+
+        } catch (SQLException e) {
+            // Логування та обробка помилки
+            throw new RuntimeException("Failed to delete menu item from database: " + databaseName, e);
+        }
+    }
+
+
 }
