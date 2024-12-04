@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.qrflash.Entity.MenuItemEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import java.sql.*;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
 public class DynamicDatabaseService {
     @PersistenceContext
     private EntityManager entityManager;
+    private final JdbcTemplate jdbcTemplate;
     private static final String DB_URL_TEMPLATE = "jdbc:postgresql://138.201.118.129:5432/%s";
     private static final String DB_USERNAME = "postgres";
     private static final String DB_PASSWORD = "R3cv77m6F3Ys6MfV";
@@ -51,6 +53,29 @@ public class DynamicDatabaseService {
             return menuItems;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to fetch menu items from database: " + databaseName, e);
+        }
+    }
+    public void saveMenuItem(String databaseName, MenuItemEntity menuItemEntity) {
+        String sql = "INSERT INTO menu_items " +
+                "(name, description, category, is_active, unit, item_type, is_pinned, price) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, menuItemEntity.getName());
+            preparedStatement.setString(2, menuItemEntity.getDescription());
+            preparedStatement.setString(3, menuItemEntity.getCategory());
+            preparedStatement.setBoolean(4, menuItemEntity.isActive());
+            preparedStatement.setString(5, menuItemEntity.getUnit());
+            preparedStatement.setString(6, menuItemEntity.getItemType());
+            preparedStatement.setBoolean(7, menuItemEntity.isPinned());
+            preparedStatement.setDouble(8, menuItemEntity.getPrice());
+
+            preparedStatement.executeUpdate();
+            System.out.println("Menu item saved to database: " + databaseName);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to save menu item to database: " + databaseName, e);
         }
     }
 }

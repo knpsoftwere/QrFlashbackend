@@ -35,4 +35,5 @@ public class MenuItemEntity {
 
     @Column(nullable = false)
     private Double price;
+
 }
