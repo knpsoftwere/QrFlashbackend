@@ -49,7 +49,7 @@ public class AdminController {
     }
 
     @PostMapping("/menu/items")
-    public ResponseEntity<?> createMenuItem(@RequestParam UUID establishmentId,
+    public ResponseEntity<?> createMenuItem(@RequestParam("est_uuid") UUID establishmentId,
                                          @RequestBody MenuItemEntity menuItemEntity,
                                          @RequestHeader("Authorization") String token) {
         menuItemsService.createMenuItem(establishmentId, menuItemEntity);
