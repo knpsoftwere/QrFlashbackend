@@ -99,5 +99,30 @@ public class DynamicDatabaseService {
         }
     }
 
+    public void updateMenuItem(String databaseName, MenuItemEntity menuItemEntity) {
+        String sql = "UPDATE menu_items SET name = ?, description = ?, category = ?, is_active = ?, unit = ?, item_type = ?, is_pinned = ?, price = ? WHERE id = ?";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, menuItemEntity.getName());
+            preparedStatement.setString(2, menuItemEntity.getDescription());
+            preparedStatement.setString(3, menuItemEntity.getCategory());
+            preparedStatement.setBoolean(4, menuItemEntity.isActive());
+            preparedStatement.setString(5, menuItemEntity.getUnit());
+            preparedStatement.setString(6, menuItemEntity.getItemType());
+            preparedStatement.setBoolean(7, menuItemEntity.isPinned());
+            preparedStatement.setDouble(8, menuItemEntity.getPrice());
+            preparedStatement.setLong(9, menuItemEntity.getId());
+
+            // Виконуємо оновлення
+            int rowsAffected = preparedStatement.executeUpdate();
+            System.out.println("Updated " + rowsAffected + " row(s) with ID " + menuItemEntity.getId() + " in database: " + databaseName);
+
+        } catch (SQLException e) {
+            // Логування та обробка помилки
+            throw new RuntimeException("Failed to update menu item in database: " + databaseName, e);
+        }
+    }
+
 
 }

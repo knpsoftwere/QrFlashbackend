@@ -66,4 +66,24 @@ public class AdminController {
 
         return ResponseEntity.ok("Menu item deleted successfully");
     }
+
+    @PutMapping("/menu/items/{id}")
+    public ResponseEntity<?> updateMenuItem(
+            @PathVariable Long id,
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestBody MenuItemEntity menuItemEntity,
+            @RequestHeader("Authorization") String token) {
+        try {
+            // Видаляємо префікс "Bearer " із токену
+            token = token.replace("Bearer ", "");
+
+            // Викликаємо сервіс для оновлення
+            menuItemEntity.setId(id); // <--- Присвоюємо отримане `id` до об'єкта `menuItemEntity`
+            menuItemsService.updateMenuItem(establishmentId, menuItemEntity, token);
+            return ResponseEntity.ok("Menu item updated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
 }

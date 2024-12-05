@@ -76,4 +76,14 @@ public class MenuItemsService {
         dynamicDatabaseService.deleteMenuItems(databaseName, itemId);
     }
 
+    public void updateMenuItem(UUID establishmentId, MenuItemEntity menuItemEntity, String token) {
+        // Формуємо назву бази даних
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        System.out.println("Using database: " + databaseName);
+
+        // Викликаємо метод у DynamicDatabaseService для оновлення
+        dynamicDatabaseService.updateMenuItem(databaseName, menuItemEntity);
+        System.out.println("Menu item updated in database: " + databaseName);
+    }
+
 }
