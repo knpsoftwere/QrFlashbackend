@@ -6,12 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.TableItem;
 import org.qrflash.Entity.MenuItemEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -124,5 +127,139 @@ public class DynamicDatabaseService {
         }
     }
 
+    public void ensureTableExists(String databaseName) {
+        String sql = "CREATE TABLE IF NOT EXISTS table_items (" +
+                "id SERIAL PRIMARY KEY, " +
+                "table_number INT NOT NULL UNIQUE, " +
+                "qr_code VARCHAR(255) NOT NULL UNIQUE, " +
+                "is_active BOOLEAN DEFAULT TRUE, " +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ")";
 
+        try (Connection connection = getConnection(databaseName);
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sql);
+            System.out.println("Table 'table_items' ensured in database: " + databaseName);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to ensure table exists in database: " + databaseName, e);
+        }
+    }
+
+    public void createTableItem(String databaseName, int tableNumber, String qrCode, Timestamp createdAt) {
+        String sql = "INSERT INTO table_items (table_number, qr_code, is_active, created_at) " +
+                "VALUES (?, ?, ?, ?)";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, tableNumber);
+            preparedStatement.setString(2, qrCode);
+            preparedStatement.setBoolean(3, true); // is_active за замовчуванням true
+            preparedStatement.setTimestamp(4, createdAt);
+
+            preparedStatement.executeUpdate();
+            System.out.println("New table item created in database: " + databaseName);
+        } catch (SQLException e) {
+            if (e.getSQLState().equals("23505")) { // SQL код для порушення унікальності
+                throw new RuntimeException("Duplicate entry for table_number or qr_code", e);
+            }
+            throw new RuntimeException("Failed to create table item in database: " + databaseName, e);
+        }
+    }
+
+    public Map<String, Object> getAllTables(String databaseName) {
+        String sql = "SELECT * FROM table_items";
+
+        try (Connection connection = getConnection(databaseName);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+
+            List<Map<String, Object>> tables = new ArrayList<>();
+            while (resultSet.next()) {
+                Map<String, Object> table = new HashMap<>();
+                table.put("id", resultSet.getLong("id"));
+                table.put("tableNumber", resultSet.getInt("table_number"));
+                table.put("qrCode", resultSet.getString("qr_code"));
+                table.put("isActive", resultSet.getBoolean("is_active"));
+                table.put("createdAt", resultSet.getTimestamp("created_at"));
+                tables.add(table);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("tables", tables);
+            return response;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to fetch tables from database: " + databaseName, e);
+        }
+    }
+
+    public void updateTableItem(String databaseName, TableItem tableItem) {
+        // Перевіряємо, чи такий номер столика вже існує (крім поточного)
+        if (isTableNumberExists(databaseName, tableItem.getTableNumber(), tableItem.getId())) {
+            throw new RuntimeException("Table number already exists");
+        }
+
+        // Формуємо SQL-запит
+        String sql = "UPDATE table_items SET table_number = ?, qr_code = ?, is_active = ? WHERE id = ?";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            // Заповнюємо параметри
+            preparedStatement.setInt(1, tableItem.getTableNumber());
+            preparedStatement.setString(2, tableItem.getQrCode());
+            preparedStatement.setBoolean(3, tableItem.is_Active());
+            preparedStatement.setLong(4, tableItem.getId());
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new RuntimeException("No table found with id: " + tableItem.getId());
+            }
+
+            System.out.println("Table with id " + tableItem.getId() + " updated in database: " + databaseName);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update table in database: " + databaseName, e);
+        }
+    }
+
+    private boolean isTableNumberExists(String databaseName, int tableNumber, Long excludeId) {
+        String sql = "SELECT COUNT(*) FROM table_items WHERE table_number = ? AND (id != ? OR ? IS NULL)";
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setInt(1, tableNumber);
+            preparedStatement.setObject(2, excludeId, java.sql.Types.BIGINT);
+            preparedStatement.setObject(3, excludeId, java.sql.Types.BIGINT);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to check table number existence in database: " + databaseName, e);
+        }
+        return false;
+    }
+
+
+    public void deleteTableItem(String databaseName, Long id) {
+        String sql = "DELETE FROM table_items WHERE id = ?";
+
+        try (Connection connection = getConnection(databaseName);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setLong(1, id);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new RuntimeException("No table found with id: " + id);
+            }
+
+            System.out.println("Table with id " + id + " deleted from database: " + databaseName);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete table in database: " + databaseName, e);
+        }
+    }
 }
