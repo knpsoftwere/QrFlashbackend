@@ -1,7 +1,7 @@
 package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
-import org.qrflash.DTO.TableItem;
+import org.qrflash.DTO.TableItemDTO;
 import org.qrflash.Service.DynamicDatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,12 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/client/")
+@RequestMapping("/admin/table")
 @CrossOrigin(origins = "https://qrflash.online")
 @RequiredArgsConstructor
 public class TableController {
@@ -77,16 +76,16 @@ public class TableController {
     public ResponseEntity<?> updateTableItem(
             @PathVariable("est_uuid") UUID establishmentUuid,
             @PathVariable("id") Long id, // ID передається в запиті
-            @RequestBody TableItem tableItem) {
+            @RequestBody TableItemDTO tableItemDTO) {
         try {
             // Переконуємося, що передане `id` відповідає ID у об'єкті `TableItem`
-            tableItem.setId(id);
+            tableItemDTO.setId(id);
 
             // Формуємо назву бази
             String databaseName = "est_" + establishmentUuid.toString().replace("-", "_");
 
             // Викликаємо метод оновлення
-            dynamicDatabaseService.updateTableItem(databaseName, tableItem);
+            dynamicDatabaseService.updateTableItem(databaseName, tableItemDTO);
 
             return ResponseEntity.ok("Table updated successfully");
         } catch (RuntimeException e) {

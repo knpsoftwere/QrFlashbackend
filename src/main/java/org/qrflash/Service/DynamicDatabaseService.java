@@ -1,12 +1,10 @@
 package org.qrflash.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.qrflash.DTO.TableItem;
+import org.qrflash.DTO.MenuItemDTO;
+import org.qrflash.DTO.TableItemDTO;
 import org.qrflash.Entity.MenuItemEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -193,9 +191,9 @@ public class DynamicDatabaseService {
         }
     }
 
-    public void updateTableItem(String databaseName, TableItem tableItem) {
+    public void updateTableItem(String databaseName, TableItemDTO tableItemDTO) {
         // Перевіряємо, чи такий номер столика вже існує (крім поточного)
-        if (isTableNumberExists(databaseName, tableItem.getTableNumber(), tableItem.getId())) {
+        if (isTableNumberExists(databaseName, tableItemDTO.getTableNumber(), tableItemDTO.getId())) {
             throw new RuntimeException("Table number already exists");
         }
 
@@ -206,18 +204,18 @@ public class DynamicDatabaseService {
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Заповнюємо параметри
-            preparedStatement.setInt(1, tableItem.getTableNumber());
-            preparedStatement.setString(2, tableItem.getQrCode());
-            preparedStatement.setBoolean(3, tableItem.is_Active());
-            preparedStatement.setLong(4, tableItem.getId());
+            preparedStatement.setInt(1, tableItemDTO.getTableNumber());
+            preparedStatement.setString(2, tableItemDTO.getQrCode());
+            preparedStatement.setBoolean(3, tableItemDTO.is_Active());
+            preparedStatement.setLong(4, tableItemDTO.getId());
 
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected == 0) {
-                throw new RuntimeException("No table found with id: " + tableItem.getId());
+                throw new RuntimeException("No table found with id: " + tableItemDTO.getId());
             }
 
-            System.out.println("Table with id " + tableItem.getId() + " updated in database: " + databaseName);
+            System.out.println("Table with id " + tableItemDTO.getId() + " updated in database: " + databaseName);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update table in database: " + databaseName, e);
         }
@@ -262,4 +260,6 @@ public class DynamicDatabaseService {
             throw new RuntimeException("Failed to delete table in database: " + databaseName, e);
         }
     }
+
+
 }
