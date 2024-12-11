@@ -16,7 +16,7 @@ public class JwtUtil {
                 //Налаштування токена на 10 годин
                 //.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
                 //Налаштування токена на 15 хв
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 3))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
