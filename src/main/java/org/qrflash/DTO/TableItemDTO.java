@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class TableItemDTO {
     private Long id;
-    private int tableNumber;
+    private Integer tableNumber;
     private String qrCode;
     @JsonProperty("isActive")
     private boolean is_Active;

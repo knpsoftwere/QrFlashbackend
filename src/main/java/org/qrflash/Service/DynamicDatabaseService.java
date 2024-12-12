@@ -192,22 +192,54 @@ public class DynamicDatabaseService {
     }
 
     public void updateTableItem(String databaseName, TableItemDTO tableItemDTO) {
-        // Перевіряємо, чи такий номер столика вже існує (крім поточного)
-        if (isTableNumberExists(databaseName, tableItemDTO.getTableNumber(), tableItemDTO.getId())) {
-            throw new RuntimeException("Table number already exists");
+        // Збираємо список пар "поле = ?" і список параметрів
+        List<String> setClauses = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
+
+        // Перевірка та оновлення tableNumber
+        // Якщо tableNumber не null, перевіримо, чи вже існує такий номер столу (крім поточного id)
+        if (tableItemDTO.getTableNumber() != null) {
+            if (isTableNumberExists(databaseName, tableItemDTO.getTableNumber(), tableItemDTO.getId())) {
+                throw new RuntimeException("Table number already exists");
+            }
+            setClauses.add("table_number = ?");
+            parameters.add(tableItemDTO.getTableNumber());
         }
 
-        // Формуємо SQL-запит
-        String sql = "UPDATE table_items SET table_number = ?, qr_code = ?, is_active = ? WHERE id = ?";
+        // Якщо qrCode передано і не пустий - оновлюємо
+        if (tableItemDTO.getQrCode() != null && !tableItemDTO.getQrCode().isEmpty()) {
+            setClauses.add("qr_code = ?");
+            parameters.add(tableItemDTO.getQrCode());
+        }
+
+        // Поле is_active вважаємо обов'язковим або таким, що завжди оновлюється
+        setClauses.add("is_active = ?");
+        parameters.add(tableItemDTO.is_Active());
+
+        if (setClauses.isEmpty()) {
+            throw new RuntimeException("No fields provided to update for id: " + tableItemDTO.getId());
+        }
+
+        // Формуємо динамічний SQL
+        String sql = "UPDATE table_items SET " + String.join(", ", setClauses) + " WHERE id = ?";
 
         try (Connection connection = getConnection(databaseName);
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            // Заповнюємо параметри
-            preparedStatement.setInt(1, tableItemDTO.getTableNumber());
-            preparedStatement.setString(2, tableItemDTO.getQrCode());
-            preparedStatement.setBoolean(3, tableItemDTO.is_Active());
-            preparedStatement.setLong(4, tableItemDTO.getId());
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                if (param instanceof Integer) {
+                    preparedStatement.setInt(paramIndex, (Integer) param);
+                } else if (param instanceof Boolean) {
+                    preparedStatement.setBoolean(paramIndex, (Boolean) param);
+                } else if (param instanceof String) {
+                    preparedStatement.setString(paramIndex, (String) param);
+                }
+                paramIndex++;
+            }
+
+            // Останній параметр — id
+            preparedStatement.setLong(paramIndex, tableItemDTO.getId());
 
             int rowsAffected = preparedStatement.executeUpdate();
 
@@ -216,10 +248,13 @@ public class DynamicDatabaseService {
             }
 
             System.out.println("Table with id " + tableItemDTO.getId() + " updated in database: " + databaseName);
+
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update table in database: " + databaseName, e);
         }
     }
+
+
 
     private boolean isTableNumberExists(String databaseName, int tableNumber, Long excludeId) {
         String sql = "SELECT COUNT(*) FROM table_items WHERE table_number = ? AND (id != ? OR ? IS NULL)";
