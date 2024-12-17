@@ -1,9 +1,8 @@
-package org.qrflash.Service;
+package org.qrflash.Service.DataBase;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.qrflash.DTO.MenuItemDTO;
 import org.qrflash.DTO.TableItemDTO;
 import org.qrflash.Entity.MenuItemEntity;
 import org.springframework.jdbc.core.JdbcTemplate;

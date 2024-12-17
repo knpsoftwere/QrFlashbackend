@@ -2,7 +2,7 @@ package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.TableItemDTO;
-import org.qrflash.Service.DynamicDatabaseService;
+import org.qrflash.Service.DataBase.DynamicDatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

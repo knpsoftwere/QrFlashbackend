@@ -1,15 +1,15 @@
-package org.qrflash.Service;
+package org.qrflash.Service.Establishment;
 
 import lombok.RequiredArgsConstructor;
 import org.qrflash.Entity.EstablishmentsEntity;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.Repository.EstablishmentsRepository;
 import org.qrflash.Repository.UserRepository;
+import org.qrflash.Service.DataBase.DataBaseService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -61,7 +61,13 @@ public class EstablishmentsService {
         //Створюємо базу даних і таблиці
         dataBaseService.createDatabase(databaseName);
         dataBaseService.createMenuItemTable(databaseName);
+        dataBaseService.createOpeningHourseTable(databaseName);
         dataBaseService.insertDefaultMenuItems(databaseName);
+
+        dataBaseService.createConfigTable(databaseName);
+        dataBaseService.insertDefaultConfigData(databaseName);
+        //Створення таблиці opening hours
+        dataBaseService.initializeOpeningHours(databaseName);
 
 
         return establishment;

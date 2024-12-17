@@ -6,7 +6,7 @@ import org.qrflash.Entity.EstablishmentsEntity;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.JWT.JwtUtil;
 import org.qrflash.Repository.EstablishmentsRepository;
-import org.qrflash.Service.EstablishmentsService;
+import org.qrflash.Service.Establishment.EstablishmentsService;
 import org.qrflash.Service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

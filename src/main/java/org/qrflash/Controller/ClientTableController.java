@@ -1,9 +1,9 @@
 package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
-import org.qrflash.DTO.MenuItemDTO;
 import org.qrflash.DTO.TableItemDTO;
-import org.qrflash.Service.ClientDynamicDataBaseService;
+import org.qrflash.Service.Client.ConfigService;
+import org.qrflash.Service.DataBase.ClientDynamicDataBaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,40 +24,47 @@ public class ClientTableController {
 
     @Autowired
     private ClientDynamicDataBaseService clientDynamicDataBaseService;
+    @Autowired
+    private ConfigService configService;
 
     @GetMapping("/{est_uuid}/{qr_Code}")
     public ResponseEntity<?> getTableItems(
             @PathVariable("est_uuid") String establishmentUuid,
             @PathVariable("qr_Code") String qr_Code) {
         try {
-            // Декодуємо qr_Code, щоб уникнути проблем із символами
+            // Декодуємо qr_Code
             try {
                 qr_Code = URLDecoder.decode(qr_Code, StandardCharsets.UTF_8.name());
             } catch (Exception e) {
                 throw new IllegalArgumentException("CTC getTableItems? Помилка декодування: " + qr_Code);
             }
 
-            // Додатковий лог для перевірки отриманого значення
-            //System.out.println("Decoded QR Code: " + qr_Code);
-
             // Формуємо назву бази даних
             String databaseName = "est_" + establishmentUuid.toString().replace("-", "_");
 
-            // Перевіряємо наявність столика у таблиці table_items
+            // Перевірка столика
             TableItemDTO tableItemDTO = clientDynamicDataBaseService.getTableItemByQrCode(databaseName, qr_Code);
-
             if (tableItemDTO == null || !tableItemDTO.is_Active()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("CTC: getTableItem? Столи не знайдені або немає активних.");
             }
 
-            // Отримуємо меню із таблиці menu_items
-            List<MenuItemDTO> menuItems = clientDynamicDataBaseService.getMenuItemsCLient(databaseName);
+            // Отримуємо конфігурацію
+            Map<String, Object> config = clientDynamicDataBaseService.getConfig(databaseName);
+
+            // Витягаємо активну схему
+            Map<String, Object> activeColorScheme = getActiveColorScheme(config);
+
+            // Отримуємо opening_hours без поля "checkout"
+            List<Map<String, Object>> openingHours = configService.getOpeningHours(databaseName);
+            List<Map<String, Object>> filteredOpeningHours = filterCheckoutField(openingHours);
 
             // Формуємо відповідь
             Map<String, Object> response = new HashMap<>();
             response.put("table", tableItemDTO);
-            response.put("menu", menuItems);
+            response.put("establishment_properties", config.get("establishment_properties"));
+            response.put("active_color_scheme", activeColorScheme);
+            response.put("opening_hours", filteredOpeningHours);
 
             return ResponseEntity.ok(response);
 
@@ -67,5 +75,22 @@ public class ClientTableController {
         }
     }
 
+    private Map<String, Object> getActiveColorScheme(Map<String, Object> config) {
+        Map<String, Object> colorSchemes = (Map<String, Object>) config.get("color_schemes");
+        String activeSchemeName = (String) colorSchemes.get("active_scheme_name");
+        List<Map<String, Object>> schemes = (List<Map<String, Object>>) colorSchemes.get("schemes");
 
+        return schemes.stream()
+                .filter(scheme -> activeSchemeName.equals(scheme.get("name")))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Активна схема не знайдена."));
+    }
+    private List<Map<String, Object>> filterCheckoutField(List<Map<String, Object>> openingHours) {
+        return openingHours.stream()
+                .map(day -> {
+                    day.remove("checkout"); // Видаляємо поле "checkout"
+                    return day;
+                })
+                .collect(Collectors.toList());
+    }
 }

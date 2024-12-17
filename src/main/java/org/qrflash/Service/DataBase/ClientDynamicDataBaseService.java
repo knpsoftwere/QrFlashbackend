@@ -1,13 +1,18 @@
-package org.qrflash.Service;
+package org.qrflash.Service.DataBase;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.MenuItemDTO;
 import org.qrflash.DTO.TableItemDTO;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -89,29 +94,54 @@ public class ClientDynamicDataBaseService {
     }
 
 
-    public List<MenuItemDTO> getMenuItemsCLient(String databaseName) {
-        String sql = "SELECT * FROM menu_items";
+//    public List<MenuItemDTO> getMenuItemsCLient(String databaseName) {
+//        String sql = "SELECT * FROM menu_items";
+//
+//        try (Connection connection = getConnection(databaseName);
+//             Statement statement = connection.createStatement();
+//             ResultSet resultSet = statement.executeQuery(sql)) {
+//
+//            List<MenuItemDTO> menuItems = new ArrayList<>();
+//            while (resultSet.next()) {
+//                MenuItemDTO menuItem = new MenuItemDTO();
+//                menuItem.setId(resultSet.getLong("id"));
+//                menuItem.setName(resultSet.getString("name"));
+//                menuItem.setDescription(resultSet.getString("description"));
+//                menuItem.setPrice(resultSet.getDouble("price"));
+//                menuItem.setCategory(resultSet.getString("category"));
+//                menuItem.setAvailable(resultSet.getBoolean("is_active"));
+//                menuItems.add(menuItem);
+//            }
+//
+//            return menuItems;
+//
+//        } catch (SQLException e) {
+//            throw new RuntimeException("CDDBS getMenuItemsClient? Помилка отримання інформації позицій меню з бази: " + databaseName, e);
+//        }
+//    }
 
+    public Map<String, Object> getConfig(String databaseName) {
+        String sql = "SELECT key, data FROM config";
         try (Connection connection = getConnection(databaseName);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
-            List<MenuItemDTO> menuItems = new ArrayList<>();
-            while (resultSet.next()) {
-                MenuItemDTO menuItem = new MenuItemDTO();
-                menuItem.setId(resultSet.getLong("id"));
-                menuItem.setName(resultSet.getString("name"));
-                menuItem.setDescription(resultSet.getString("description"));
-                menuItem.setPrice(resultSet.getDouble("price"));
-                menuItem.setCategory(resultSet.getString("category"));
-                menuItem.setAvailable(resultSet.getBoolean("is_active"));
-                menuItems.add(menuItem);
+            try (ResultSet rs = ps.executeQuery()) {
+                Map<String, Object> config = new HashMap<>();
+                // Використовуємо Jackson для парсингу JSON з ResultSet
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                while (rs.next()) {
+                    String key = rs.getString("key");
+                    String data = rs.getString("data");
+                    // Перетворюємо JSON з колонки data у Map (або іншу структуру)
+                    Map<String, Object> jsonData = objectMapper.readValue(data, new TypeReference<Map<String,Object>>(){});
+                    config.put(key, jsonData);
+                }
+
+                return config;
             }
-
-            return menuItems;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("CDDBS getMenuItemsClient? Помилка отримання інформації позицій меню з бази: " + databaseName, e);
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException("Failed to fetch config from database: " + databaseName, e);
         }
     }
 
