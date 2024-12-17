@@ -61,7 +61,7 @@ public class EstablishmentsService {
         //Створюємо базу даних і таблиці
         dataBaseService.createDatabase(databaseName);
         dataBaseService.createMenuItemTable(databaseName);
-        dataBaseService.createOpeningHourseTable(databaseName);
+        dataBaseService.createOpeningHoursTable(databaseName);
         dataBaseService.insertDefaultMenuItems(databaseName);
 
         dataBaseService.createConfigTable(databaseName);

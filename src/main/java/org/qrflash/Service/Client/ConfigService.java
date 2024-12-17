@@ -1,5 +1,6 @@
 package org.qrflash.Service.Client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -298,60 +299,93 @@ public class ConfigService {
         }
     }
 
+//    public List<Map<String, Object>> getOpeningHours(String databaseName) {
+//        String sql = "SELECT day, work_hours, breaks, status, checkout FROM opening_hours ORDER BY id";
+//        try (Connection connection = dataBaseService.getConnection(databaseName);
+//             Statement statement = connection.createStatement();
+//             ResultSet resultSet = statement.executeQuery(sql)) {
+//            List<Map<String, Object>> days = new ArrayList<>();
+//            while (resultSet.next()) {
+//                Map<String, Object> day = new HashMap<>();
+//                day.put("day", resultSet.getString("day"));
+//                day.put("work_hours", resultSet.getString("work_hours"));
+//                day.put("breaks", resultSet.getString("breaks"));
+//                day.put("status", resultSet.getString("status"));
+//                day.put("checkout", resultSet.getBoolean("checkout"));
+//                days.add(day);
+//            }
+//            return days;
+//        } catch (SQLException e) {
+//            throw new RuntimeException("Failed to retrieve opening hours", e);
+//        }
+//    }
+
+
     public List<Map<String, Object>> getOpeningHours(String databaseName) {
-        String sql = "SELECT day, work_hours, breaks, status, checkout FROM opening_hours ORDER BY id";
+        String sql = "SELECT day, work_hours, breaks, checkout, status FROM opening_hours ORDER BY id";
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
         try (Connection connection = dataBaseService.getConnection(databaseName);
              Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
-            List<Map<String, Object>> days = new ArrayList<>();
-            while (resultSet.next()) {
-                Map<String, Object> day = new HashMap<>();
-                day.put("day", resultSet.getString("day"));
-                day.put("work_hours", resultSet.getString("work_hours"));
-                day.put("breaks", resultSet.getString("breaks"));
-                day.put("status", resultSet.getString("status"));
-                day.put("checkout", resultSet.getBoolean("checkout"));
-                days.add(day);
+             ResultSet rs = statement.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Map<String, Object> dayInfo = new HashMap<>();
+                dayInfo.put("day", rs.getString("day"));
+                dayInfo.put("work_hours", objectMapper.readValue(rs.getString("work_hours"), Map.class));
+                dayInfo.put("breaks", objectMapper.readValue(rs.getString("breaks"), List.class));
+                dayInfo.put("checkout", rs.getBoolean("checkout"));
+                dayInfo.put("status", rs.getString("status"));
+
+                result.add(dayInfo);
             }
-            return days;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve opening hours", e);
+        } catch (SQLException | JsonProcessingException e) {
+            throw new RuntimeException("Помилка отримання opening_hours", e);
         }
+
+        return result;
     }
 
-    public void updateOpeningHoursPartial(String databaseName, String day, Map<String, Object> updates) {
-        // Побудова SQL-запиту для часткового оновлення
-        StringBuilder sqlBuilder = new StringBuilder("UPDATE opening_hours SET ");
+    public void updatePartialOpeningHours(String databaseName, String day, String workHours, String breaks, Boolean checkout, String status) {
+        StringBuilder sql = new StringBuilder("UPDATE opening_hours SET ");
         List<Object> parameters = new ArrayList<>();
 
-        // Додаємо кожне передане поле для оновлення
-        updates.forEach((key, value) -> {
-            sqlBuilder.append(key).append(" = ?, ");
-            parameters.add(value);
-        });
+        if (workHours != null) {
+            sql.append("work_hours = ?::jsonb, ");
+            parameters.add(workHours);
+        }
+        if (breaks != null) {
+            sql.append("breaks = ?::jsonb, ");
+            parameters.add(breaks);
+        }
+        if (checkout != null) {
+            sql.append("checkout = ?, ");
+            parameters.add(checkout);
+        }
+        if (status != null) {
+            sql.append("status = ?, ");
+            parameters.add(status);
+        }
 
-        sqlBuilder.setLength(sqlBuilder.length() - 2); // Видаляємо останню кому
-        sqlBuilder.append(" WHERE day = ?");
+        sql.setLength(sql.length() - 2); // Видаляємо останню кому
+        sql.append(" WHERE day = ?");
+        parameters.add(day);
 
-        parameters.add(day); // Додаємо день як умову WHERE
-
-        // Виконуємо SQL-запит
         try (Connection connection = dataBaseService.getConnection(databaseName);
-             PreparedStatement preparedStatement = connection.prepareStatement(sqlBuilder.toString())) {
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < parameters.size(); i++) {
-                preparedStatement.setObject(i + 1, parameters.get(i));
+                ps.setObject(i + 1, parameters.get(i));
             }
 
-            int rows = preparedStatement.executeUpdate();
+            int rows = ps.executeUpdate();
             if (rows == 0) {
-                throw new RuntimeException("Не вдалося оновити дані для дня: " + day);
+                throw new RuntimeException("День " + day + " не знайдено для оновлення");
             }
-
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка оновлення робочих годин для дня: " + day, e);
+            throw new RuntimeException("Помилка оновлення даних для дня: " + day, e);
         }
     }
-
-
 }

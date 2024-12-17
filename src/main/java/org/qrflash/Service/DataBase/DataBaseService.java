@@ -63,28 +63,28 @@ public class DataBaseService {
             throw new RuntimeException("Помилка створення menu_items: " + databaseName, e);
         }
     }
-    public void createOpeningHourseTable(String databaseName) {
+    public void createOpeningHoursTable(String databaseName) {
         String sql = """
-                CREATE TABLE opening_hours (
-                    id SERIAL PRIMARY KEY,
-                    day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
-                    work_hours TEXT,          -- Робочі години, як '09:00-12:00,13:00-18:00'
-                    breaks TEXT,              -- Час обіду, як '12:00-13:00'
-                    status VARCHAR(10) CHECK (status IN ('open', 'closed', 'paused')) DEFAULT 'closed',
-                    checkout BOOLEAN NOT NULL DEFAULT false
-                );
-                """;
+        CREATE TABLE opening_hours (
+            id SERIAL PRIMARY KEY,
+            day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
+            work_hours JSONB DEFAULT '{}',
+            breaks JSONB DEFAULT '[]',
+            status VARCHAR(10) CHECK (status IN ('open', 'closed', 'paused')) DEFAULT 'closed',
+            checkout BOOLEAN NOT NULL DEFAULT false
+        );
+    """;
+
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            System.out.println("Створення таблиці opening_hourse для : " + databaseName);
             statement.executeUpdate(sql);
-
+            System.out.println("Створено таблицю opening_hours для: " + databaseName);
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка створення opening_hourse: " + databaseName, e);
+            throw new RuntimeException("Помилка створення opening_hours таблиці", e);
         }
-
     }
+
 
     //Створення для таблиці початкових меню
     public void insertDefaultMenuItems(String databaseName) {
@@ -107,16 +107,29 @@ public class DataBaseService {
 
     //Метод створення таблиці opening hours
     public void initializeOpeningHours(String databaseName) {
-        String sql = "INSERT INTO opening_hours (day) VALUES " +
-                "('Monday'), ('Tuesday'), ('Wednesday'), " +
-                "('Thursday'), ('Friday'), ('Saturday'), ('Sunday')";
+        String sql = """
+        INSERT INTO opening_hours (day, work_hours, breaks)
+        VALUES
+        ('Monday', '{}', '[]'),
+        ('Tuesday', '{}', '[]'),
+        ('Wednesday', '{}', '[]'),
+        ('Thursday', '{}', '[]'),
+        ('Friday', '{}', '[]'),
+        ('Saturday', '{}', '[]'),
+        ('Sunday', '{}', '[]')
+        ON CONFLICT (day) DO NOTHING;
+    """;
+
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
+
             statement.executeUpdate(sql);
+            System.out.println("Ініціалізовано дані в таблиці opening_hours");
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to initialize opening_hours table in database: " + databaseName, e);
+            throw new RuntimeException("Помилка ініціалізації opening_hours", e);
         }
     }
+
 
     //Метод на створення config для закладу
     public void createConfigTable(String databaseName) {

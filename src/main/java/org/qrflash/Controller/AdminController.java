@@ -200,20 +200,54 @@ public class AdminController {
     @GetMapping("/establishment/{est_uuid}/opening-hours")
     public ResponseEntity<?> getOpeningHours(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        List<Map<String, Object>> hours = configService.getOpeningHours(databaseName);
-        return ResponseEntity.ok(Map.of("opening_hours", hours));
+        List<Map<String, Object>> openingHours = configService.getOpeningHours(databaseName);
+
+        return ResponseEntity.ok(Map.of("opening_hours", openingHours));
     }
 
     @PutMapping("/establishment/{est_uuid}/opening-hours/partial")
-    public ResponseEntity<?> updateOpeningHoursPartial(
+    public ResponseEntity<?> updatePartialOpeningHours(
             @PathVariable("est_uuid") UUID establishmentId,
-            @RequestBody Map<String, Map<String, Object>> updates) {
+            @RequestBody Map<String, Map<String, Object>> request) {
+
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        for (Map.Entry<String, Map<String, Object>> entry : updates.entrySet()) {
-            String day = entry.getKey(); // Наприклад: "Monday"
-            Map<String, Object> dayUpdates = entry.getValue(); // Значення для оновлення
-            configService.updateOpeningHoursPartial(databaseName, day, dayUpdates);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (Map.Entry<String, Map<String, Object>> entry : request.entrySet()) {
+            String day = entry.getKey();
+            Map<String, Object> updates = entry.getValue();
+
+            try {
+                // Ініціалізація параметрів як null
+                String workHoursJson = null;
+                String breaksJson = null;
+                Boolean checkout = null;
+                String status = null;
+
+                // Оновлення лише переданих полів
+                if (updates.containsKey("work_hours")) {
+                    workHoursJson = objectMapper.writeValueAsString(updates.get("work_hours"));
+                }
+                if (updates.containsKey("breaks")) {
+                    breaksJson = objectMapper.writeValueAsString(updates.get("breaks"));
+                }
+                if (updates.containsKey("checkout")) {
+                    checkout = (Boolean) updates.get("checkout");
+                }
+                if (updates.containsKey("status")) {
+                    status = (String) updates.get("status");
+                }
+
+                // Викликаємо сервіс для оновлення
+                configService.updatePartialOpeningHours(databaseName, day, workHoursJson, breaksJson, checkout, status);
+
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Помилка обробки JSON для дня: " + day, e);
+            }
         }
-        return ResponseEntity.ok(Map.of("message", "Робочі години оновлено"));
+
+        return ResponseEntity.ok(Map.of("message", "Дані оновлено успішно"));
     }
+
+
 }
