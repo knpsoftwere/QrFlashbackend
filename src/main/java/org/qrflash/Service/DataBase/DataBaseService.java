@@ -20,6 +20,7 @@ public class DataBaseService {
     }
     //Створення самої бази даних
     public void createDatabase(String databaseName) {
+        System.out.println("createDatabase: Запустився");
         String createDbSql = "CREATE DATABASE " + databaseName +
                 " WITH ENCODING 'UTF8' LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template0";
         String dropDbSql = "DROP DATABASE IF EXISTS " + databaseName;
@@ -27,43 +28,44 @@ public class DataBaseService {
         try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            System.out.println("Deleting existing database: " + databaseName);
+            System.out.println("createDatabase: База даних видалена : " + databaseName);
             statement.executeUpdate(dropDbSql);
 
-            System.out.println("Creating new database: " + databaseName);
+            System.out.println("createDatabase: Створена нова база: " + databaseName);
             statement.executeUpdate(createDbSql);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to create database: " + e.getMessage(), e);
+            throw new RuntimeException("createDatabase: Помилка створення: " + e.getMessage(), e);
         }
     }
     //Створює таблицю меню
     public void createMenuItemTable(String databaseName) {
+        System.out.println("createMenuItemTable Запустився");
         String createTableSQL = """
-        CREATE TABLE IF NOT EXISTS menu_items (
-            id BIGSERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            description TEXT,
-            category VARCHAR(50) NOT NULL,
-            is_active BOOLEAN NOT NULL DEFAULT TRUE,
-            unit VARCHAR(50) NOT NULL,
-            item_type VARCHAR(50) NOT NULL,
-            is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
-            price DOUBLE PRECISION NOT NULL
-        );
+            CREATE TABLE IF NOT EXISTS menu_items (
+              id BIGSERIAL PRIMARY KEY,
+              name VARCHAR(255) NOT NULL,
+              description TEXT,
+              unit VARCHAR(50) NOT NULL,
+              item_type VARCHAR(50) NOT NULL,
+              price DOUBLE PRECISION NOT NULL,
+              is_active BOOLEAN DEFAULT TRUE,
+              category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL
+          );
         """;
 
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            System.out.println("Створена база данних: " + databaseName);
+            System.out.println("createMenuItemTable: Створена Таблиця MenuItemTable");
             statement.executeUpdate(createTableSQL);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка створення menu_items: " + databaseName, e);
+            throw new RuntimeException("createMenuItemTable: Помилка створення MenuItemTable: "+ e);
         }
     }
     public void createOpeningHoursTable(String databaseName) {
+        System.out.println("createOpeningHoursTable Запустився");
         String sql = """
         CREATE TABLE opening_hours (
             id SERIAL PRIMARY KEY,
@@ -79,34 +81,36 @@ public class DataBaseService {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
-            System.out.println("Створено таблицю opening_hours для: " + databaseName);
+            System.out.println("createOpeningHoursTable: Створено таблицю opening Hours");
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка створення opening_hours таблиці", e);
+            throw new RuntimeException("createOpeningHoursTable: Помилка створення opening Hours таблиці", e);
         }
     }
 
 
     //Створення для таблиці початкових меню
     public void insertDefaultMenuItems(String databaseName) {
+        System.out.println("insertDefaultMenuItems: Запустився");
         String insertDefaultItemsSQL = """
-        INSERT INTO menu_items (name, category, unit, item_type, price)
+        INSERT INTO menu_items (name, category_id, unit, item_type, price)
         VALUES 
-        ('Товар 1', 'Hot Dish', 'kg', 'stock', 50.0);
+        ('Товар 1', 1, 'kg', 'stock', 50.0);
         """;
 
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            System.out.println("Inserting default items into `menu_item` table in database: " + databaseName);
+            System.out.println("insertDefaultMenuItems: Стандартні товари для таблиці створені");
             statement.executeUpdate(insertDefaultItemsSQL);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to insert default items into `menu_item` table in database: " + databaseName, e);
+            throw new RuntimeException("insertDefaultMenuItems: Помилка створення стандартних значеньтовару: " + e);
         }
     }
 
     //Метод створення таблиці opening hours
     public void initializeOpeningHours(String databaseName) {
+        System.out.println("initializeOpeningHours: Запустився");
         String sql = """
         INSERT INTO opening_hours (day, work_hours, breaks)
         VALUES
@@ -124,15 +128,16 @@ public class DataBaseService {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
-            System.out.println("Ініціалізовано дані в таблиці opening_hours");
+            System.out.println("initializeOpeningHours: Ініціалізовано дані в таблиці opening hours");
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка ініціалізації opening_hours", e);
+            throw new RuntimeException("initializeOpeningHours: Помилка ініціалізації opening hours ", e);
         }
     }
 
 
     //Метод на створення config для закладу
     public void createConfigTable(String databaseName) {
+        System.out.println("createConfigTable: Запустився");
         String createConfigSQL = """
         CREATE TABLE IF NOT EXISTS config (
             id SERIAL PRIMARY KEY,
@@ -144,11 +149,11 @@ public class DataBaseService {
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            System.out.println("Створюємо таблицю config в базі: " + databaseName);
+            System.out.println("createConfigTable: Створюємо таблицю config");
             statement.executeUpdate(createConfigSQL);
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to create config table in database: " + databaseName, e);
+            throw new RuntimeException("createConfigTable: Помилка творення таблиці: " + e);
         }
     }
 
@@ -157,13 +162,16 @@ public class DataBaseService {
         // JSON дані по замовчуванню
 
         // establishment_properties
+        System.out.println("insertDefaultConfigData: Запустився");
         String establishmentPropertiesJson = """
         {
           "name": "Мій заклад",
           "address": "",
+          "description": "",
           "contact_info": []
         }
         """;
+        System.out.println("insertDefaultConfigData: establishmentPropertiesJson додано");
 
         // color_schemes
         String colorSchemesJson = """
@@ -180,13 +188,16 @@ public class DataBaseService {
           "active_scheme_name": "Default"
         }
         """;
+        System.out.println("insertDefaultConfigData: colorSchemesJson додано");
 
         // Вставляємо всі два записи
         insertConfigRow(databaseName, "establishment_properties", establishmentPropertiesJson);
         insertConfigRow(databaseName, "color_schemes", colorSchemesJson);
+        System.out.println("insertDefaultConfigData: Завершився");
     }
     //Присвоєння значень (ключ - значення), зверху приклад
     private void insertConfigRow(String databaseName, String key, String jsonData) {
+        System.out.println("insertConfigRow: Запустився");
         String sql = "INSERT INTO config (key, data) VALUES (?, ?::jsonb)";
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -195,9 +206,178 @@ public class DataBaseService {
             preparedStatement.setString(2, jsonData);
             preparedStatement.executeUpdate();
 
-            System.out.println("Inserted default config for key: " + key + " into database: " + databaseName);
+            System.out.println("insertConfigRow: Добавлений кофіг ключ: " + key);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to insert config row (" + key + ") into database: " + databaseName, e);
+            throw new RuntimeException("insertConfigRow: Помилка створення ключа (" + key + ")", e);
+        }
+    }
+
+    public void recreateDatabase(String databaseName) {
+        // Видаляємо базу, якщо вона існує
+        System.out.println("recreateDatabase: Запустився");
+        dropDatabaseIfExists(databaseName);
+        System.out.println("recreateDatabase: Видалили базу");
+
+        // Створюємо нову базу даних
+        String createDbSql = "CREATE DATABASE " + databaseName;
+        try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createDbSql);
+            System.out.println("recreateDatabase: База даних успішно створена.");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("recreateDatabase: Помилка створення бази даних: " + databaseName, e);
+        }
+
+        // Підключаємось до новоствореної бази для подальших дій
+        try {
+            System.out.println("Підключення до нової бази даних: " + databaseName);
+
+            // Створення всіх таблиць
+            createCategoriesTable(databaseName);
+            createMenuItemTable(databaseName);
+            createOpeningHoursTable(databaseName);
+            createConfigTable(databaseName);
+            createTagsTable(databaseName);
+            createMenuItemTagsTable(databaseName);
+
+            // Заповнення дефолтними даними
+            initializeOpeningHours(databaseName);
+            insertDefaultConfigData(databaseName);
+            insertDefaultTags(databaseName);
+            insertDefaultCategories(databaseName);
+            insertDefaultMenuItems(databaseName);
+
+            System.out.println("recreateDatabase: База даних успішно пересоздана та ініціалізована!");
+
+        } catch (Exception e) {
+            throw new RuntimeException("recreateDatabase: Помилка під час пересоздання бази даних: " + databaseName, e);
+        }
+    }
+
+    public void createTagsTable(String databaseName) {
+        System.out.println("createTagsTable: Запустився");
+
+        String createTagsSQL = """
+            CREATE TABLE IF NOT EXISTS tags (
+                id BIGSERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT,
+                emoji VARCHAR(10) UNIQUE NOT NULL
+            );
+            """;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createTagsSQL);
+            System.out.println("createTagsTable: Таблиця `tags` успішно створена в базі");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("createTagsTable: Помилка створення таблиці `tags`", e);
+        }
+    }
+
+
+    public void createMenuItemTagsTable(String databaseName) {
+        System.out.println("createMenuItemTagsTable: Запустився");
+        String createMenuItemTagsSQL = """
+        CREATE TABLE IF NOT EXISTS menu_item_tags (
+            menu_item_id BIGINT REFERENCES menu_items(id) ON DELETE CASCADE,
+            tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE,
+            PRIMARY KEY (menu_item_id, tag_id)
+        );
+    """;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createMenuItemTagsSQL);
+            System.out.println("createMenuItemTagsTable: Таблиця `menu_item_tags` успішно створена в базі");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("createMenuItemTagsTable: Помилка створення `menu_item_tags` у базі", e);
+        }
+    }
+
+    public void insertDefaultTags(String databaseName) {
+        System.out.println("insertDefaultTags: Запустився");
+        String insertTagsSQL = """
+        INSERT INTO tags (name, description, emoji)
+        VALUES 
+            ('Гостре', 'Страви з гострим перцем', '🌶️'),
+            ('Алергени', 'Містить потенційні алергени', '⚠️'),
+            ('Алкоголь', 'Містить алкоголь', '🍷')
+        ON CONFLICT (name) DO NOTHING;
+    """;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(insertTagsSQL);
+            System.out.println("insertDefaultTags: Дефолтні теги успішно додані в базу");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("insertDefaultTags: Помилка вставки дефолтних тегів", e);
+        }
+    }
+
+    public void createCategoriesTable(String databaseName) {
+        System.out.println("createCategoriesTable: Запустився");
+        String createCategoriesSQL = """
+        CREATE TABLE IF NOT EXISTS categories (
+              id BIGSERIAL PRIMARY KEY,
+              name VARCHAR(255) NOT NULL UNIQUE,
+              description TEXT,
+              image_url VARCHAR(500)
+          );
+    """;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createCategoriesSQL);
+            System.out.println("createCategoriesTable: Таблиця `categories` успішно створена в базі");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("createCategoriesTable: Помилка створення таблиці `categories` у базі", e);
+        }
+    }
+
+    public void insertDefaultCategories(String databaseName) {
+        System.out.println("insertDefaultCategories: Запустився");
+        String insertCategoriesSQL = """
+        INSERT INTO categories (name, description, image_url)
+        VALUES 
+            ('Категорія', 'Стандартна категорія', 'https://cdn.example.com/images/drinks.jpg')
+        ON CONFLICT (name) DO NOTHING;
+    """;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(insertCategoriesSQL);
+            System.out.println("insertDefaultCategories: Дефолтні категорії успішно додані в базу");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("insertDefaultCategories: Помилка вставки дефолтних категорій у базу", e);
+        }
+    }
+
+    public void dropDatabaseIfExists(String databaseName) {
+        System.out.println("dropDatabaseIfExists: Запустився");
+        String dropDbSql = "DROP DATABASE IF EXISTS " + databaseName;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(dropDbSql);
+            System.out.println("dropDatabaseIfExists: База даних успішно видалена (якщо існувала).");
+
+        } catch (SQLException e) {
+            System.out.println("dropDatabaseIfExists: Попередження: Неможливо видалити базу, вона може не існувати.");
+            // Не кидаємо RuntimeException, просто логування
         }
     }
 }

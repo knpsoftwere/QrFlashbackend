@@ -60,14 +60,19 @@ public class EstablishmentsService {
 
         //Створюємо базу даних і таблиці
         dataBaseService.createDatabase(databaseName);
+        dataBaseService.createCategoriesTable(databaseName);
         dataBaseService.createMenuItemTable(databaseName);
         dataBaseService.createOpeningHoursTable(databaseName);
-        dataBaseService.insertDefaultMenuItems(databaseName);
+        dataBaseService.createTagsTable(databaseName);
+        dataBaseService.createMenuItemTagsTable(databaseName);
+
 
         dataBaseService.createConfigTable(databaseName);
         dataBaseService.insertDefaultConfigData(databaseName);
-        //Створення таблиці opening hours
         dataBaseService.initializeOpeningHours(databaseName);
+        dataBaseService.insertDefaultTags(databaseName);
+        dataBaseService.insertDefaultCategories(databaseName);
+        dataBaseService.insertDefaultMenuItems(databaseName);
 
 
         return establishment;
@@ -82,4 +87,5 @@ public class EstablishmentsService {
 
         return establishment.getUuid().toString();
     }
+
 }

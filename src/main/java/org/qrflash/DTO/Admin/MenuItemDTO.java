@@ -1,4 +1,4 @@
-package org.qrflash.DTO;
+package org.qrflash.DTO.Admin;
 
 import lombok.Data;
 
@@ -10,4 +10,5 @@ public class MenuItemDTO {
     private double price;
     private String category;
     private boolean isAvailable;
+    private Long categoryId;
 }

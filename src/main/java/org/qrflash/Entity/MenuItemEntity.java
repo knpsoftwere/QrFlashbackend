@@ -1,13 +1,17 @@
 package org.qrflash.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
+@Table(name = "menu_items")
 @Data
-@Table(name="menu_items")
 public class MenuItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,21 +23,19 @@ public class MenuItemEntity {
     private String description;
 
     @Column(nullable = false)
-    private String category;
-
-    @Column(nullable = false)
-    private boolean isActive = true;
-
-    @Column(nullable = false)
     private String unit;
 
     @Column(nullable = false)
     private String itemType;
 
     @Column(nullable = false)
-    private boolean isPinned = false;
-
-    @Column(nullable = false)
     private Double price;
 
+    @Column(nullable = false)
+    private boolean isActive = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
 }
+

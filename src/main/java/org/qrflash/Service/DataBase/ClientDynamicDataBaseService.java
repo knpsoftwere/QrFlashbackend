@@ -3,15 +3,12 @@ package org.qrflash.Service.DataBase;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.qrflash.DTO.MenuItemDTO;
 import org.qrflash.DTO.TableItemDTO;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service

@@ -3,10 +3,15 @@ package org.qrflash.Controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.Admin.MenuItemDTO;
 import org.qrflash.DTO.AppError;
+import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
+import org.qrflash.Entity.TagEntity;
+import org.qrflash.Service.Admin.CategoryService;
+import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ConfigService;
-import org.qrflash.Service.MenuItemsService;
+import org.qrflash.Service.Admin.MenuItemsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,25 +28,20 @@ import java.util.UUID;
 public class AdminController {
     private final MenuItemsService menuItemsService;
     private final ConfigService configService;
+    private final TagService tagService;
+    private final CategoryService categoryService;
 
-    private UUID formatUUID(String rawUuid) {
-        return UUID.fromString(rawUuid.replace("_", "-"));
-    }
-
-    // ---------------------------
-    // Menu
-    // ---------------------------
+    // -----------Menu-----------
     @GetMapping("/menu")
-    public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") String establishmentId,
+    public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") UUID establishmentId,
                                           @RequestHeader("Authorization") String token) {
         try {
-            UUID formattedUuid = formatUUID(establishmentId);
-            System.out.println(formattedUuid);
+            String databaseName = "est_" + establishmentId.toString().replace("-", "_");
             // Видаляємо префікс "Bearer " із токена
             token = token.replace("Bearer ", "");
 
             // Отримуємо список меню з сервісу
-            List<MenuItemEntity> menuItems = menuItemsService.getMenuItems(formattedUuid, token);
+            List<MenuItemEntity> menuItems = menuItemsService.getMenuItemsWithCategories(databaseName);
 
             //Обгортка JSON для зручності парсування
             Map<String, Object> response = new HashMap<>();
@@ -56,11 +56,9 @@ public class AdminController {
     }
 
     @PostMapping("/menu/items")
-    public ResponseEntity<?> createMenuItem(@RequestParam("est_uuid") UUID establishmentId,
-                                         @RequestBody MenuItemEntity menuItemEntity,
-                                         @RequestHeader("Authorization") String token) {
-        menuItemsService.createMenuItem(establishmentId, menuItemEntity);
-        return ResponseEntity.ok("Menu item created");
+    public ResponseEntity<?> createMenuItem(@RequestBody MenuItemDTO menuItemDTO) {
+        MenuItemEntity menuItem = menuItemsService.createMenuItem(menuItemDTO);
+        return ResponseEntity.ok(Map.of("message", "Товар успішно створено", "item", menuItem));
     }
 
     @DeleteMapping("/menu/items/{id}")
@@ -93,9 +91,19 @@ public class AdminController {
         }
     }
 
+    @PutMapping("/menu/items/{id}/tags")
+    public ResponseEntity<?> addTagsToMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @PathVariable Long id,
+            @RequestBody List<Long> tagIds
+    ) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        menuItemsService.addTagsToMenuItem(databaseName, id, tagIds);
+        return ResponseEntity.ok(Map.of("message", "Теги успішно додано до товару"));
+    }
     // ---------------------------
-    // Establishment Properties
-    // ---------------------------
+
+    // ----------Establishment Properties-------
     @GetMapping("/establishment/{est_uuid}/properties")
     public ResponseEntity<?> getEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
@@ -108,11 +116,12 @@ public class AdminController {
                                                            @RequestBody Map<String, String> payload) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
         String name = payload.get("name");
+        String description = payload.get("description");
         String address = payload.get("address");
-        if (name == null && address == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address') must be provided"));
+        if (name == null && address == null && description == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address' or 'description') must be provided"));
         }
-        configService.updateEstablishmentProperties(databaseName, name, address);
+        configService.updateEstablishmentProperties(databaseName, name, address, description);
         return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
     }
 
@@ -135,11 +144,9 @@ public class AdminController {
         configService.removeContactInfoAtIndex(databaseName, index);
         return ResponseEntity.ok(Map.of("message", "Контактний номер видалено"));
     }
-
-    // ---------------------------
-    // Color Schemes
     // ---------------------------
 
+    // ----------Color Schemes--------
     @GetMapping("/establishment/{est_uuid}/color-schemes")
     public ResponseEntity<?> getColorSchemes(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
@@ -192,14 +199,13 @@ public class AdminController {
         configService.removeColorSchemeAtIndex(databaseName, index);
         return ResponseEntity.ok(Map.of("message", "Схема успішно видалена"));
     }
-
-    // ---------------------------
-    // Opening Hours
     // ---------------------------
 
+    // ---------Opening Hours------------
     @GetMapping("/establishment/{est_uuid}/opening-hours")
     public ResponseEntity<?> getOpeningHours(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+
         List<Map<String, Object>> openingHours = configService.getOpeningHours(databaseName);
 
         return ResponseEntity.ok(Map.of("opening_hours", openingHours));
@@ -237,7 +243,6 @@ public class AdminController {
                 if (updates.containsKey("status")) {
                     status = (String) updates.get("status");
                 }
-
                 // Викликаємо сервіс для оновлення
                 configService.updatePartialOpeningHours(databaseName, day, workHoursJson, breaksJson, checkout, status);
 
@@ -245,9 +250,74 @@ public class AdminController {
                 throw new RuntimeException("Помилка обробки JSON для дня: " + day, e);
             }
         }
-
         return ResponseEntity.ok(Map.of("message", "Дані оновлено успішно"));
     }
+    // ---------------------------
 
+    // ----------Tags----------
+    @GetMapping("/menu/tags")
+    public ResponseEntity<?> getTags(@RequestParam("est_uuid") UUID establishmentId) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        List<TagEntity> tags = tagService.getTags(databaseName);
 
+        return ResponseEntity.ok(Map.of("tags", tags));
+    }
+
+    @PostMapping("/menu/tags")
+    public ResponseEntity<?> addTag(@RequestParam("est_uuid") UUID establishmentId,
+                                    @RequestBody TagEntity tag) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        String resultMessage = tagService.addTag(databaseName, tag);
+
+        if (resultMessage.contains("вже існує")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", resultMessage));
+        }
+
+        return ResponseEntity.ok(Map.of("message", resultMessage));
+    }
+
+    @PutMapping("/menu/tags")
+    public ResponseEntity<?> updateTag(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("id") Long tagId,
+            @RequestBody TagEntity updatedTag) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        tagService.updateTag(databaseName, tagId, updatedTag);
+        return ResponseEntity.ok(Map.of("message", "Тег успішно оновлено"));
+    }
+
+    @DeleteMapping("/menu/tags")
+    public ResponseEntity<?> deleteTag(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("id") Long tagId) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        tagService.deleteTag(databaseName, tagId);
+        return ResponseEntity.ok(Map.of("message", "Тег успішно видалено"));
+    }
+    // ---------------------------
+
+    // -------------Categories----------
+
+    @GetMapping("/menu/categories")
+    public ResponseEntity<List<CategoryEntity>> getAllCategories(@RequestParam("est_uuid") UUID establishmentId) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        return ResponseEntity.ok(categoryService.getAllCategories(databaseName));
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> addCategory(
+            @RequestParam("databaseName") String databaseName,
+            @RequestBody CategoryEntity category) {
+        categoryService.addCategory(databaseName, category);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(
+            @RequestParam("databaseName") String databaseName,
+            @PathVariable Long id) {
+        categoryService.deleteCategory(databaseName, id);
+        return ResponseEntity.ok().build();
+    }
+    // ----------------------------------
 }
