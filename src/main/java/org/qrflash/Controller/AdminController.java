@@ -106,39 +106,59 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("properties", props));
     }
 
+//    @PutMapping("/establishment/{est_uuid}/properties")
+//    public ResponseEntity<?> updateEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId,
+//                                                           @RequestBody Map<String, String> payload) {
+//        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+//        String name = payload.get("name");
+//        String description = payload.get("description");
+//        String address = payload.get("address");
+//        if (name == null && address == null && description == null) {
+//            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address' or 'description') must be provided"));
+//        }
+//        configService.updateEstablishmentProperties(databaseName, name, address, description);
+//        return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
+//    }
+
     @PutMapping("/establishment/{est_uuid}/properties")
-    public ResponseEntity<?> updateEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId,
-                                                           @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> updateEstablishmentProperties(
+            @PathVariable("est_uuid") UUID establishmentId,
+            @RequestBody Map<String, Object> payload) {
+
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        String name = payload.get("name");
-        String description = payload.get("description");
-        String address = payload.get("address");
-        if (name == null && address == null && description == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address' or 'description') must be provided"));
+        String name = (String) payload.get("name");
+        String description = (String) payload.get("description");
+        String address = (String) payload.get("address");
+        List<String> contactInfo = (List<String>) payload.get("contactInfo");
+
+        if (name == null && address == null && description == null && contactInfo == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name', 'address', 'description', or 'contactInfo') must be provided"));
         }
-        configService.updateEstablishmentProperties(databaseName, name, address, description);
+
+        configService.updateEstablishmentProperties(databaseName, name, address, description, contactInfo);
         return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
     }
 
-    @PostMapping("/establishment/{est_uuid}/properties/contact-info")
-    public ResponseEntity<?> addContactInfo(@PathVariable("est_uuid") UUID establishmentId,
-                                            @RequestBody Map<String, List<String>> payload) {
-        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        List<String> numbers = payload.get("numbers");
-        if (numbers == null || numbers.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Numbers array cannot be empty"));
-        }
-        configService.addContactInfo(databaseName, numbers);
-        return ResponseEntity.ok(Map.of("message", "Номера додані"));
-    }
 
-    @DeleteMapping("/establishment/{est_uuid}/properties/contact-info/{index}")
-    public ResponseEntity<?> removeContactInfo(@PathVariable("est_uuid") UUID establishmentId,
-                                               @PathVariable int index) {
-        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        configService.removeContactInfoAtIndex(databaseName, index);
-        return ResponseEntity.ok(Map.of("message", "Контактний номер видалено"));
-    }
+//    @PostMapping("/establishment/{est_uuid}/properties/contact-info")
+//    public ResponseEntity<?> addContactInfo(@PathVariable("est_uuid") UUID establishmentId,
+//                                            @RequestBody Map<String, List<String>> payload) {
+//        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+//        List<String> numbers = payload.get("numbers");
+//        if (numbers == null || numbers.isEmpty()) {
+//            return ResponseEntity.badRequest().body(Map.of("message", "Numbers array cannot be empty"));
+//        }
+//        configService.addContactInfo(databaseName, numbers);
+//        return ResponseEntity.ok(Map.of("message", "Номера додані"));
+//    }
+//
+//    @DeleteMapping("/establishment/{est_uuid}/properties/contact-info/{index}")
+//    public ResponseEntity<?> removeContactInfo(@PathVariable("est_uuid") UUID establishmentId,
+//                                               @PathVariable int index) {
+//        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+//        configService.removeContactInfoAtIndex(databaseName, index);
+//        return ResponseEntity.ok(Map.of("message", "Контактний номер видалено"));
+//    }
     // ---------------------------
 
     // ----------Color Schemes--------
