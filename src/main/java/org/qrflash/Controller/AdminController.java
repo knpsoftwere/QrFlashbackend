@@ -3,15 +3,25 @@ package org.qrflash.Controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.Admin.CategoryDTO;
+import org.qrflash.DTO.Admin.MenuDTO.MenuItemCreateDTO;
+import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
+import org.qrflash.DTO.Admin.MenuDTO.MenuItemUpdateDTO;
 import org.qrflash.DTO.AppError;
+import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
+import org.qrflash.Entity.TagEntity;
+import org.qrflash.Exeption.DuplicateTagException;
+import org.qrflash.Service.Admin.CategoryService;
+import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ConfigService;
-import org.qrflash.Service.MenuItemsService;
+import org.qrflash.Service.Admin.MenuItemsService;
+import org.qrflash.Source.Multi_tenancy.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,79 +33,72 @@ import java.util.UUID;
 public class AdminController {
     private final MenuItemsService menuItemsService;
     private final ConfigService configService;
+    private final TagService tagService;
+    private final CategoryService categoryService;
 
-    private UUID formatUUID(String rawUuid) {
-        return UUID.fromString(rawUuid.replace("_", "-"));
+    private String formatedUUid(UUID establishmentId){
+        return "est_" + establishmentId.toString().replace("-", "_");
     }
 
-    // ---------------------------
-    // Menu
-    // ---------------------------
-    @GetMapping("/menu")
-    public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") String establishmentId,
-                                          @RequestHeader("Authorization") String token) {
+    // -----------Menu-----------
+    @GetMapping("/menu/items")
+    public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") UUID establishmentId) {
         try {
-            UUID formattedUuid = formatUUID(establishmentId);
-            System.out.println(formattedUuid);
-            // Видаляємо префікс "Bearer " із токена
-            token = token.replace("Bearer ", "");
-
-            // Отримуємо список меню з сервісу
-            List<MenuItemEntity> menuItems = menuItemsService.getMenuItems(formattedUuid, token);
-
-            //Обгортка JSON для зручності парсування
-            Map<String, Object> response = new HashMap<>();
-            response.put("menu_items", menuItems);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new AppError(HttpStatus.UNAUTHORIZED.value(), e.getMessage())
-            );
-        }
-    }
-
-    @PostMapping("/menu/items")
-    public ResponseEntity<?> createMenuItem(@RequestParam("est_uuid") UUID establishmentId,
-                                         @RequestBody MenuItemEntity menuItemEntity,
-                                         @RequestHeader("Authorization") String token) {
-        menuItemsService.createMenuItem(establishmentId, menuItemEntity);
-        return ResponseEntity.ok("Menu item created");
-    }
-
-    @DeleteMapping("/menu/items/{id}")
-    public ResponseEntity<?> deleteMenuItem(
-            @PathVariable Long id,
-            @RequestParam("est_uuid") UUID establishmentId,
-            @RequestHeader("Authorization") String token) {
-        menuItemsService.deleteMenuItem(establishmentId, id, token);
-
-        return ResponseEntity.ok("Menu item deleted successfully");
-    }
-
-    @PutMapping("/menu/items/{id}")
-    public ResponseEntity<?> updateMenuItem(
-            @PathVariable Long id,
-            @RequestParam("est_uuid") UUID establishmentId,
-            @RequestBody MenuItemEntity menuItemEntity,
-            @RequestHeader("Authorization") String token) {
-        try {
-            // Видаляємо префікс "Bearer " із токену
-            token = token.replace("Bearer ", "");
-
-            // Викликаємо сервіс для оновлення
-            menuItemEntity.setId(id); // <--- Присвоюємо отримане `id` до об'єкта `menuItemEntity`
-            menuItemsService.updateMenuItem(establishmentId, menuItemEntity, token);
-            return ResponseEntity.ok("Menu item updated successfully!");
-        } catch (Exception e) {
+            List<MenuItemDTO> menuItems = menuItemsService.getMenuItems(formatedUUid(establishmentId));
+            return ResponseEntity.ok(Map.of("menu_item", menuItems));
+        } catch (SQLException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+                    .body(Map.of("error", "Failed to fetch menu items: " + e.getMessage()));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+    @PostMapping("/menu/additems")
+    public ResponseEntity<?> createMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestBody MenuItemCreateDTO menuItemCreateDTO) {
+        try {
+            String databaseName = formatedUUid(establishmentId);
+            menuItemsService.addMenuItem(databaseName, menuItemCreateDTO);
+
+            return ResponseEntity.ok(Map.of("message", "Товар успішно створено"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/menu/updateitem")
+    public ResponseEntity<?> updateMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("menuId") Long menuId,
+            @RequestBody MenuItemUpdateDTO menuItemUpdateDTO) {
+        try {
+            menuItemsService.updateMenuItem(formatedUUid(establishmentId), menuId, menuItemUpdateDTO);
+            return ResponseEntity.ok("Меню оновлено");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new AppError(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/menu/deleteitem")
+    public ResponseEntity<?> deleteMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("menuId") Long menuId) {
+        try {
+                menuItemsService.deleteMenuItem(formatedUUid(establishmentId), menuId);
+            return ResponseEntity.ok("Меню успішно видалено!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Помилка видалення меню: " + e.getMessage()));
         }
     }
 
     // ---------------------------
-    // Establishment Properties
-    // ---------------------------
+
+    // ----------Establishment Properties-------
     @GetMapping("/establishment/{est_uuid}/properties")
     public ResponseEntity<?> getEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
@@ -108,11 +111,12 @@ public class AdminController {
                                                            @RequestBody Map<String, String> payload) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
         String name = payload.get("name");
+        String description = payload.get("description");
         String address = payload.get("address");
-        if (name == null && address == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address') must be provided"));
+        if (name == null && address == null && description == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address' or 'description') must be provided"));
         }
-        configService.updateEstablishmentProperties(databaseName, name, address);
+        configService.updateEstablishmentProperties(databaseName, name, address, description);
         return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
     }
 
@@ -135,11 +139,9 @@ public class AdminController {
         configService.removeContactInfoAtIndex(databaseName, index);
         return ResponseEntity.ok(Map.of("message", "Контактний номер видалено"));
     }
-
-    // ---------------------------
-    // Color Schemes
     // ---------------------------
 
+    // ----------Color Schemes--------
     @GetMapping("/establishment/{est_uuid}/color-schemes")
     public ResponseEntity<?> getColorSchemes(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
@@ -192,14 +194,13 @@ public class AdminController {
         configService.removeColorSchemeAtIndex(databaseName, index);
         return ResponseEntity.ok(Map.of("message", "Схема успішно видалена"));
     }
-
-    // ---------------------------
-    // Opening Hours
     // ---------------------------
 
+    // ---------Opening Hours------------
     @GetMapping("/establishment/{est_uuid}/opening-hours")
     public ResponseEntity<?> getOpeningHours(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+
         List<Map<String, Object>> openingHours = configService.getOpeningHours(databaseName);
 
         return ResponseEntity.ok(Map.of("opening_hours", openingHours));
@@ -237,7 +238,6 @@ public class AdminController {
                 if (updates.containsKey("status")) {
                     status = (String) updates.get("status");
                 }
-
                 // Викликаємо сервіс для оновлення
                 configService.updatePartialOpeningHours(databaseName, day, workHoursJson, breaksJson, checkout, status);
 
@@ -245,9 +245,139 @@ public class AdminController {
                 throw new RuntimeException("Помилка обробки JSON для дня: " + day, e);
             }
         }
-
         return ResponseEntity.ok(Map.of("message", "Дані оновлено успішно"));
     }
+    // ---------------------------
 
+    // ---------Tags in menu------------
+    @PostMapping("/menu/tagsitems/add")
+    public ResponseEntity<?> addTagToMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("menuItemId") Long menuItemId,
+            @RequestParam("tagId") Long tagId){
+        try {
+            menuItemsService.addTagToMenuItem(formatedUUid(establishmentId), menuItemId, tagId);
+            return ResponseEntity.ok("Тег успішно доданий до товару");
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Помилка додавання тегу: " + e.getMessage()));
+        }
+    }
 
+    @DeleteMapping("/menu/tagsitems/del")
+    public ResponseEntity<?> removeTagFromMenuItem(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("menuItemId") Long menuItemId,
+            @RequestParam("tagId") Long tagId) {
+        try {
+            menuItemsService.removeTagFromMenuItem(formatedUUid(establishmentId), menuItemId, tagId);
+            return ResponseEntity.ok("Тег успішно видалено");
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Помилка видаленні тегу: " + e.getMessage()));
+        }
+    }
+    // ---------------------------------
+
+    // ----------Tags----------
+    @GetMapping("/menu/tags")
+    public ResponseEntity<?> getTags(@RequestParam("est_uuid") UUID establishmentId) {
+        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+        List<TagEntity> tags = tagService.getTags(databaseName);
+        return ResponseEntity.ok(Map.of("tags", tags));
+    }
+
+    @PostMapping("/menu/tags/add")
+    public ResponseEntity<?> createTags(
+            @RequestBody TagEntity tagEntity,
+            @RequestParam("est_uuid") UUID establishmentId) {
+        try {
+            tagService.addTag(formatedUUid(establishmentId), tagEntity);
+            return ResponseEntity.ok("Тег успішно додано");
+            }catch (DuplicateTagException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("createTag: Невідома помилка: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/menu/tags/add")
+    public ResponseEntity<?> updateTags(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("tagId") Long tagId,
+            @RequestBody TagEntity tagEntity){
+        try{
+            tagService.updateTag(formatedUUid(establishmentId), tagId, tagEntity);
+            return ResponseEntity.ok("Тег успішно оновлено");
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("updateTags: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/menu/tags/del")
+    public ResponseEntity<?> removeTags(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestParam("tagId") Long tagId){
+        try{
+            tagService.deleteTag(formatedUUid(establishmentId), tagId);
+            return ResponseEntity.ok("Тег успішно видалено");
+        }catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("removeTags: " + e.getMessage());
+        }
+    }
+    // ---------------------------
+
+    // -------------Categories----------
+    @GetMapping("/menu/categories")
+    public List<CategoryDTO> getAllCategories(@RequestParam("est_uuid") UUID establishmentId) {
+        return categoryService.getAllCategories(formatedUUid(establishmentId));
+    }
+
+    @PostMapping("/menu/categories/add")
+    public ResponseEntity<?> addCategory(
+            @RequestParam("est_uuid") UUID establishmentId,
+            @RequestBody CategoryEntity categoryEntity) {
+        try {
+            String result = categoryService.addCategory(formatedUUid(establishmentId), categoryEntity);
+            if (result.contains("вже існує")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("addCategory: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/menu/categories/ref")
+    public ResponseEntity<?> refCategory(@RequestParam("est_uuid") UUID establishmentId,
+                                         @RequestParam("categoryId") Long categoryId,
+                                         @RequestBody CategoryEntity categoryEntity) {
+        try {
+            categoryService.updateCategory(formatedUUid(establishmentId), categoryId, categoryEntity);
+            return ResponseEntity.ok("Категорію успішно оновлено.");
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Не передано жодних полів для оновлення") ||
+                    e.getMessage().contains("не знайдено")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Помилка: " + e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Помилка оновлення: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/menu/categories/del")
+    public ResponseEntity<?> removeCategory(@RequestParam("est_uuid") UUID establishmentId,
+                                            @RequestParam("categoryId") Long categoryId) {
+        try {
+            categoryService.deleteCategory(formatedUUid(establishmentId), categoryId);
+            return ResponseEntity.ok("Категорію успішно видалено.");
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("не знайдено")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Помилка: " + e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Помилка видалення: " + e.getMessage());
+        }
+    }
+    // ----------------------------------
 }

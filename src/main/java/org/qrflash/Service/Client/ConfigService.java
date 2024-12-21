@@ -71,7 +71,7 @@ public class ConfigService {
     }
 
     // Змінити назву закладу
-    public void updateEstablishmentProperties(String databaseName, String newName, String newAddress) {
+    public void updateEstablishmentProperties(String databaseName, String newName, String newAddress, String description) {
         StringBuilder sql = new StringBuilder("UPDATE config SET data = jsonb_set(data, ");
 
         // Формуємо динамічний SQL-запит
@@ -82,6 +82,10 @@ public class ConfigService {
         if (newAddress != null) {
             updates.add("'{address}', ?::jsonb");
         }
+        if (description != null) {
+            updates.add("'{description}', ?::jsonb");
+        }
+
         sql.append(String.join(", jsonb_set(data, ", updates));
         sql.append(") WHERE key = 'establishment_properties';");
 
@@ -96,7 +100,9 @@ public class ConfigService {
             if (newAddress != null) {
                 ps.setString(paramIndex++, "\"" + newAddress + "\"");
             }
-
+            if (description != null) {
+                ps.setString(paramIndex++, "\"" + description + "\"");
+            }
             int rows = ps.executeUpdate();
             if (rows == 0) {
                 throw new RuntimeException("No config row updated for establishment_properties");
@@ -299,28 +305,6 @@ public class ConfigService {
         }
     }
 
-//    public List<Map<String, Object>> getOpeningHours(String databaseName) {
-//        String sql = "SELECT day, work_hours, breaks, status, checkout FROM opening_hours ORDER BY id";
-//        try (Connection connection = dataBaseService.getConnection(databaseName);
-//             Statement statement = connection.createStatement();
-//             ResultSet resultSet = statement.executeQuery(sql)) {
-//            List<Map<String, Object>> days = new ArrayList<>();
-//            while (resultSet.next()) {
-//                Map<String, Object> day = new HashMap<>();
-//                day.put("day", resultSet.getString("day"));
-//                day.put("work_hours", resultSet.getString("work_hours"));
-//                day.put("breaks", resultSet.getString("breaks"));
-//                day.put("status", resultSet.getString("status"));
-//                day.put("checkout", resultSet.getBoolean("checkout"));
-//                days.add(day);
-//            }
-//            return days;
-//        } catch (SQLException e) {
-//            throw new RuntimeException("Failed to retrieve opening hours", e);
-//        }
-//    }
-
-
     public List<Map<String, Object>> getOpeningHours(String databaseName) {
         String sql = "SELECT day, work_hours, breaks, checkout, status FROM opening_hours ORDER BY id";
 
@@ -334,8 +318,19 @@ public class ConfigService {
             while (rs.next()) {
                 Map<String, Object> dayInfo = new HashMap<>();
                 dayInfo.put("day", rs.getString("day"));
-                dayInfo.put("work_hours", objectMapper.readValue(rs.getString("work_hours"), Map.class));
-                dayInfo.put("breaks", objectMapper.readValue(rs.getString("breaks"), List.class));
+
+                // Обробка work_hours: якщо null, повертаємо порожній об'єкт {}
+                String workHoursJson = rs.getString("work_hours");
+                dayInfo.put("work_hours", workHoursJson != null
+                        ? objectMapper.readValue(workHoursJson, Map.class)
+                        : new HashMap<>());
+
+                // Обробка breaks: якщо null, повертаємо порожній масив []
+                String breaksJson = rs.getString("breaks");
+                dayInfo.put("breaks", breaksJson != null
+                        ? objectMapper.readValue(breaksJson, List.class)
+                        : new ArrayList<>());
+
                 dayInfo.put("checkout", rs.getBoolean("checkout"));
                 dayInfo.put("status", rs.getString("status"));
 
@@ -347,6 +342,7 @@ public class ConfigService {
 
         return result;
     }
+
 
     public void updatePartialOpeningHours(String databaseName, String day, String workHours, String breaks, Boolean checkout, String status) {
         StringBuilder sql = new StringBuilder("UPDATE opening_hours SET ");
