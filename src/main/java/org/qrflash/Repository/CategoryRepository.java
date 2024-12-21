@@ -11,6 +11,4 @@ import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
-    @Query("SELECT c FROM CategoryEntity c LEFT JOIN FETCH c.items WHERE c.id = :categoryId")
-    Optional<CategoryEntity> findCategoryWithItems(@Param("categoryId") Long categoryId);
 }

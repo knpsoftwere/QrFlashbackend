@@ -80,9 +80,9 @@ public class DynamicDatabaseService {
             preparedStatement.setString(1, menuItemEntity.getName());
             preparedStatement.setString(2, menuItemEntity.getDescription());
             //preparedStatement.setString(3, menuItemEntity.getCategory());
-            preparedStatement.setBoolean(4, menuItemEntity.isActive());
+            preparedStatement.setBoolean(4, menuItemEntity.getIsActive());
             preparedStatement.setString(5, menuItemEntity.getUnit());
-            preparedStatement.setString(6, menuItemEntity.getItemType());
+            preparedStatement.setString(6, menuItemEntity.getItem_type());
             //preparedStatement.setBoolean(7, menuItemEntity.isPinned());
             preparedStatement.setDouble(8, menuItemEntity.getPrice());
 
@@ -121,9 +121,9 @@ public class DynamicDatabaseService {
             preparedStatement.setString(1, menuItemEntity.getName());
             preparedStatement.setString(2, menuItemEntity.getDescription());
             //preparedStatement.setString(3, menuItemEntity.getCategory());
-            preparedStatement.setBoolean(4, menuItemEntity.isActive());
+            preparedStatement.setBoolean(4, menuItemEntity.getIsActive());
             preparedStatement.setString(5, menuItemEntity.getUnit());
-            preparedStatement.setString(6, menuItemEntity.getItemType());
+            preparedStatement.setString(6, menuItemEntity.getItem_type());
             //preparedStatement.setBoolean(7, menuItemEntity.isPinned());
             preparedStatement.setDouble(8, menuItemEntity.getPrice());
             preparedStatement.setLong(9, menuItemEntity.getId());

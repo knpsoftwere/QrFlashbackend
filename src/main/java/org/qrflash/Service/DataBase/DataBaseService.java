@@ -45,11 +45,14 @@ public class DataBaseService {
             CREATE TABLE IF NOT EXISTS menu_items (
               id BIGSERIAL PRIMARY KEY,
               name VARCHAR(255) NOT NULL,
+              photo VARCHAR(500),
               description TEXT,
-              unit VARCHAR(50) NOT NULL,
-              item_type VARCHAR(50) NOT NULL,
-              price DOUBLE PRECISION NOT NULL,
+              unit VARCHAR(50) NOT NULL CHECK (unit IN ('sht', 'kg', 'g', 'l', 'ml', 'prc')),
+              item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('warh', 'tech', 'mod', 'serv')),
+              price DECIMAL DEFAULT 0.00,
               is_active BOOLEAN DEFAULT TRUE,
+              is_pinned BOOLEAN DEFAULT FALSE,
+              is_quantity BOOLEAN DEFAULT FALSE,
               category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL
           );
         """;
@@ -64,6 +67,7 @@ public class DataBaseService {
             throw new RuntimeException("createMenuItemTable: Помилка створення MenuItemTable: "+ e);
         }
     }
+
     public void createOpeningHoursTable(String databaseName) {
         System.out.println("createOpeningHoursTable Запустився");
         String sql = """
@@ -92,9 +96,9 @@ public class DataBaseService {
     public void insertDefaultMenuItems(String databaseName) {
         System.out.println("insertDefaultMenuItems: Запустився");
         String insertDefaultItemsSQL = """
-        INSERT INTO menu_items (name, category_id, unit, item_type, price)
+        INSERT INTO menu_items (name, photo, description, unit, item_type, price, category_id)
         VALUES 
-        ('Товар 1', 1, 'kg', 'stock', 50.0);
+        ('Товар 1', 'example.png', 'Стандартний товар для тесту', 'kg', 'warh', 50.0, 1);
         """;
 
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
@@ -104,7 +108,7 @@ public class DataBaseService {
             statement.executeUpdate(insertDefaultItemsSQL);
 
         } catch (SQLException e) {
-            throw new RuntimeException("insertDefaultMenuItems: Помилка створення стандартних значеньтовару: " + e);
+            throw new RuntimeException("insertDefaultMenuItems: Помилка створення стандартних значень товару: " + e);
         }
     }
 
@@ -283,7 +287,7 @@ public class DataBaseService {
     public void createMenuItemTagsTable(String databaseName) {
         System.out.println("createMenuItemTagsTable: Запустився");
         String createMenuItemTagsSQL = """
-        CREATE TABLE IF NOT EXISTS menu_item_tags (
+        CREATE TABLE IF NOT EXISTS menu_item_tags ( 
             menu_item_id BIGINT REFERENCES menu_items(id) ON DELETE CASCADE,
             tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE,
             PRIMARY KEY (menu_item_id, tag_id)
@@ -330,7 +334,7 @@ public class DataBaseService {
               id BIGSERIAL PRIMARY KEY,
               name VARCHAR(255) NOT NULL UNIQUE,
               description TEXT,
-              image_url VARCHAR(500)
+              image_url VARCHAR(500) NOT NULL
           );
     """;
 
@@ -348,11 +352,10 @@ public class DataBaseService {
     public void insertDefaultCategories(String databaseName) {
         System.out.println("insertDefaultCategories: Запустився");
         String insertCategoriesSQL = """
-        INSERT INTO categories (name, description, image_url)
-        VALUES 
-            ('Категорія', 'Стандартна категорія', 'https://cdn.example.com/images/drinks.jpg')
-        ON CONFLICT (name) DO NOTHING;
-    """;
+            INSERT INTO categories (name, description, image_url)
+            VALUES ('Категорія', 'Стандартна категорія', 'https://cdn.example.com/images/drinks.jpg')
+            ON CONFLICT (name) DO NOTHING;
+        """;
 
         try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {

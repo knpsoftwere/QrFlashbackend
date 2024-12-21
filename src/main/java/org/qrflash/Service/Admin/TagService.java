@@ -2,6 +2,7 @@ package org.qrflash.Service.Admin;
 
 import lombok.RequiredArgsConstructor;
 import org.qrflash.Entity.TagEntity;
+import org.qrflash.Exeption.DuplicateTagException;
 import org.qrflash.Repository.TagRepository;
 import org.qrflash.Service.DataBase.DynamicDatabaseService;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ public class TagService {
 
     public String addTag(String databaseName, TagEntity tag) {
         if (isTagExists(databaseName, tag)) {
-            return "Тег з такою назвою або емоджі вже існує";
+            throw new DuplicateTagException("Тег з такою назвою або емоджі вже існує");
         }
 
         String insertQuery = "INSERT INTO tags (name, description, emoji) VALUES (?, ?, ?)";
@@ -73,7 +74,7 @@ public class TagService {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             throw new RuntimeException("Помилка під час перевірки існування тегу", e);
         }
         return false;

@@ -22,6 +22,12 @@ public class CategoryEntity {
     private String description;
 
     @Column(length = 500)
-    private String imageUrl;
+    private String image_url;
+
+    // Зв’язок з MenuItemEntity
+    //Має OneToMany до MenuItemEntity, оскільки одна категорія може мати багато товарів
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @JsonIgnore // Якщо використовуєш JSON-серіалізацію, щоб уникнути циклічних посилань
+    private List<MenuItemEntity> menuItems = new ArrayList<>();
 }
 

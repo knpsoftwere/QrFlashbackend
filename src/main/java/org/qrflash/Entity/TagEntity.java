@@ -20,9 +20,10 @@ public class TagEntity {
 
     private String description;
 
-    @Column(length = 10)
+    @Column(length = 10, nullable = false, unique = true)
     private String emoji;
 
+    //Має ManyToMany до MenuItemEntity, але один бік зв’язку має бути “власником” (owner) зв’язку.
     @ManyToMany(mappedBy = "tags")
     @JsonIgnore
     private List<MenuItemEntity> menuItems = new ArrayList<>();

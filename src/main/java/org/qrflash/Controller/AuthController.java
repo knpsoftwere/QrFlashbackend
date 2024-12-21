@@ -56,7 +56,7 @@ public class AuthController {
             establishmentUuid = establishment.getUuid().toString();
             System.out.println(getCurrentTimestamp() +" - База успішно створення");
         }catch (Exception e){
-            System.err.println(getCurrentTimestamp() +" - Помилка створення бази даних");
+            System.err.println(getCurrentTimestamp() +" - Помилка створення бази даних\n " + e);
             return new ResponseEntity<>(
                     new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Не вдалося створити базу даних для закладу"),
                     HttpStatus.INTERNAL_SERVER_ERROR
