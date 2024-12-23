@@ -95,7 +95,6 @@ public class AdminController {
                     .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Помилка видалення меню: " + e.getMessage()));
         }
     }
-
     // ---------------------------
 
     // ----------Establishment Properties-------
@@ -126,18 +125,30 @@ public class AdminController {
             @RequestBody Map<String, Object> payload) {
 
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
+
         String name = (String) payload.get("name");
-        String description = (String) payload.get("description");
         String address = (String) payload.get("address");
-        List<String> contactInfo = (List<String>) payload.get("contactInfo");
+        String description = (String) payload.get("description");
+        List<String> contactInfo = (List<String>) payload.get("contact_info");
 
         if (name == null && address == null && description == null && contactInfo == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name', 'address', 'description', or 'contactInfo') must be provided"));
+            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name', 'address', 'description', 'contact_info') must be provided"));
         }
 
-        configService.updateEstablishmentProperties(databaseName, name, address, description, contactInfo);
-        return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
+        try {
+            configService.updateEstablishmentProperties(databaseName, name, address, description, contactInfo);
+            return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Помилка оновлення закладу: " + e.getMessage()));
+        }
     }
+
+
+
+
+
 
 
 //    @PostMapping("/establishment/{est_uuid}/properties/contact-info")

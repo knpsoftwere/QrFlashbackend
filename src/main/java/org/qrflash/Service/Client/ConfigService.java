@@ -39,11 +39,6 @@ public class ConfigService {
             throw new RuntimeException("Failed to get config data for key: " + key + " from database: " + databaseName, e);
         }
     }
-
-
-
-
-
     // Видалення поля або елемента (оператор '-')
     private void jsonbRemoveField(String databaseName, String key, String jsonRemoveExpression) {
         // Для видалення поля: data = data - 'FieldName'
@@ -113,87 +108,51 @@ public class ConfigService {
 //        }
 //    }
 
-    public void updateEstablishmentProperties(String databaseName, String newName, String newAddress, String description, List<String> contactInfo) {
-        StringBuilder sql = new StringBuilder("UPDATE config SET data = jsonb_set(data, ");
-
-        // Формуємо динамічний SQL-запит
-        List<String> updates = new ArrayList<>();
-        if (newName != null) {
-            updates.add("'{name}', ?::jsonb");
-        }
-        if (newAddress != null) {
-            updates.add("'{address}', ?::jsonb");
-        }
-        if (description != null) {
-            updates.add("'{description}', ?::jsonb");
-        }
-        if (contactInfo != null) {
-            updates.add("'{contact-info}', ?::jsonb");
-        }
-
-        sql.append(String.join(", jsonb_set(data, ", updates));
-        sql.append(") WHERE key = 'establishment_properties';");
+    public void updateEstablishmentProperties(String databaseName, String name, String address, String description, List<String> contactInfo) {
+        String fetchSql = "SELECT data FROM config WHERE key = 'establishment_properties'";
+        String updateSql = "UPDATE config SET data = ?::jsonb WHERE key = 'establishment_properties'";
 
         try (Connection connection = dataBaseService.getConnection(databaseName);
-             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+             PreparedStatement fetchStatement = connection.prepareStatement(fetchSql);
+             PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
 
-            // Додаємо значення параметрів
-            int paramIndex = 1;
-            if (newName != null) {
-                ps.setString(paramIndex++, "\"" + newName + "\"");
-            }
-            if (newAddress != null) {
-                ps.setString(paramIndex++, "\"" + newAddress + "\"");
-            }
-            if (description != null) {
-                ps.setString(paramIndex++, "\"" + description + "\"");
-            }
-            if (contactInfo != null) {
-                // Перетворення масиву у JSON-строку
-                String contactInfoJson = contactInfo.stream()
-                        .map(num -> "\"" + num + "\"")
-                        .collect(Collectors.joining(",", "[", "]"));
-                ps.setString(paramIndex++, contactInfoJson);
+            // Отримуємо поточні дані
+            ResultSet resultSet = fetchStatement.executeQuery();
+            if (!resultSet.next()) {
+                throw new RuntimeException("No establishment_properties found in database: " + databaseName);
             }
 
-            int rows = ps.executeUpdate();
+            String currentData = resultSet.getString("data");
+
+            // Перетворюємо JSON на Map
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> dataMap = objectMapper.readValue(currentData, new TypeReference<Map<String, Object>>() {});
+
+            // Оновлюємо значення тільки для переданих параметрів
+            if (name != null) dataMap.put("name", name);
+            if (address != null) dataMap.put("address", address);
+            if (description != null) dataMap.put("description", description);
+            if (contactInfo != null) dataMap.put("contact_info", contactInfo);
+
+            // Перетворюємо Map назад у JSON
+            String updatedData = objectMapper.writeValueAsString(dataMap);
+
+            // Виконуємо оновлення
+            updateStatement.setString(1, updatedData);
+            int rows = updateStatement.executeUpdate();
+
             if (rows == 0) {
-                throw new RuntimeException("No config row updated for establishment_properties");
+                throw new RuntimeException("No rows updated for establishment_properties in database: " + databaseName);
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             throw new RuntimeException("Failed to update establishment properties in database: " + databaseName, e);
         }
     }
 
 
 
-//    // Додати контактний номер
-//    public void addContactInfo(String databaseName, List<String> newNumbers) {
-//        String sql = "UPDATE config " +
-//                "SET data = jsonb_set(data, '{contact_info}', " +
-//                "(SELECT to_jsonb(array(SELECT DISTINCT unnest(array_cat(ARRAY(SELECT jsonb_array_elements_text(data->'contact_info')), ?::text[])))))" +
-//                ") WHERE key = 'establishment_properties'";
-//
-//        try (Connection connection = dataBaseService.getConnection(databaseName);
-//             PreparedStatement ps = connection.prepareStatement(sql)) {
-//
-//            // Конвертуємо список номерів у масив рядків
-//            ps.setArray(1, connection.createArrayOf("text", newNumbers.toArray()));
-//
-//            int rows = ps.executeUpdate();
-//            if (rows == 0) {
-//                throw new RuntimeException("No config row updated for 'establishment_properties'");
-//            }
-//        } catch (SQLException e) {
-//            throw new RuntimeException("Failed to add contact info in database: " + databaseName, e);
-//        }
-//    }
-//
-//    // Видалити контактний номер за індексом
-//    public void removeContactInfoAtIndex(String databaseName, int index) {
-//        // Припустимо, потрібно видалити contact_info[index]
-//        jsonbRemoveField(databaseName, "establishment_properties", "#- '{contact_info," + index + "}'");
-//    }
+
+
 
     //-------------------------------
     // Методи для color_schemes
