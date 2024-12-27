@@ -138,4 +138,32 @@ public class CategoryService {
             throw new RuntimeException("deleteCategory: Помилка видалення категорії у базі: " + databaseName, e);
         }
     }
+
+    public List<CategoryDTO> getCategoriesUsedByActiveMenuItems(String databaseName) {
+        String query = """
+            SELECT DISTINCT c.id, c.name, c.description, c.image_url
+            FROM menu_items mi
+                 JOIN categories c ON mi.category_id = c.id
+            WHERE mi.is_active = TRUE
+        """;
+
+        List<CategoryDTO> result = new ArrayList<>();
+        try (Connection connection = dynamicDatabaseService.getConnection(databaseName);
+             Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery(query)) {
+
+            while (rs.next()) {
+                CategoryDTO dto = new CategoryDTO();
+                dto.setId(rs.getLong("id"));
+                dto.setName(rs.getString("name"));
+                dto.setDescription(rs.getString("description"));
+                dto.setImage_url(rs.getString("image_url"));
+                result.add(dto);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching categories from active menu items in DB: " + databaseName, e);
+        }
+
+        return result;
+    }
 }

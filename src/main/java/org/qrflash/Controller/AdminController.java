@@ -36,7 +36,7 @@ public class AdminController {
     private final TagService tagService;
     private final CategoryService categoryService;
 
-    private String formatedUUid(UUID establishmentId){
+    public static String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
     }
 
@@ -52,7 +52,7 @@ public class AdminController {
                     "tags", tagEntity,
                     "categories", categoryDTO
             );
-
+    
 
             return ResponseEntity.ok(Map.of("data", response));
         } catch (SQLException e) {
