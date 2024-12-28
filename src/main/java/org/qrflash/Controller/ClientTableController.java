@@ -115,12 +115,15 @@ public class ClientTableController {
             // Якщо треба – тегів і категорій беремо все так само
             List<TagEntity> tagEntity = tagService.getTags(dbName);
             List<CategoryDTO> categoryDTO = categoryService.getCategoriesUsedByActiveMenuItems(dbName);
+            Map<String, Object> config = clientDynamicDataBaseService.getConfig(dbName);
+            Map<String, Object> activeColorScheme = getActiveColorScheme(config);
 
             // Складаємо разом у Map (аналогічно до попереднього прикладу)
             Map<String, Object> response = Map.of(
                     "menu_items", menuItems,
                     "tags", tagEntity,
-                    "categories", categoryDTO
+                    "categories", categoryDTO,
+                    "active_color_scheme",activeColorScheme
             );
 
             return ResponseEntity.ok(Map.of("data", response));
