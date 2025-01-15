@@ -245,6 +245,8 @@ public class DataBaseService {
             createConfigTable(databaseName);
             createTagsTable(databaseName);
             createMenuItemTagsTable(databaseName);
+            createOrdersTable(databaseName);
+            createPaymentsTable(databaseName);
 
             // Заповнення дефолтними даними
             initializeOpeningHours(databaseName);
@@ -381,6 +383,59 @@ public class DataBaseService {
         } catch (SQLException e) {
             System.out.println("dropDatabaseIfExists: Попередження: Неможливо видалити базу, вона може не існувати.");
             // Не кидаємо RuntimeException, просто логування
+        }
+    }
+
+    //Створення таблиці orders яка зберігатиме в собі основну інформацію про замовлення
+    public void createOrdersTable(String databaseName) {
+        System.out.println("createOrdersTable: Запустився ");
+        String createOrdersTable = """
+                CREATE TABLE orders(
+                    id BIGSERIAL PRIMARY KEY,
+                    total_amount DOUBLE PRECISION NOT NULL,
+                    currency VARCHAR(3) NOT NULL,
+                    status VARCHAR(50) DEFAULT 'PENDING',
+                    order_items JSONB,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+                """;
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createOrdersTable);
+            System.out.println("createorderstable: Таблиця `orders` успішно створена в базі");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("createorderstable: Помилка створення таблиці `orders` у базі", e);
+        }
+    }
+
+    //Створення таблиці payments  яка зберігає в собі інформацію по транзакції
+    public void createPaymentsTable(String databaseName) {
+        System.out.println("createPaymentsTable: Запуск");
+        String createPaymentsTable = """
+                CREATE TABLE payments(
+                    id BIGSERIAL PRIMARY KEY,
+                    order_id BIGINT NOT NULL,
+                    invoice_id VARCHAR(100),
+                    payment_url TEXT,
+                    status VARCHAR(50) DEFAULT 'PENDING',
+                    amount DOUBLE PRECISION NOT NULL,
+                    current VARCHAR(3) NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW(),
+                    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+                );""";
+
+        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate(createPaymentsTable);
+            System.out.println("createPaymentsTable: Таблиця `payments` успішно створена в базі");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("createPaymentsTable: Помилка створення таблиці `payments` у базі", e);
         }
     }
 }

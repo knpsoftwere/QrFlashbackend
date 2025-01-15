@@ -65,6 +65,8 @@ public class EstablishmentsService {
         dataBaseService.createOpeningHoursTable(databaseName);
         dataBaseService.createTagsTable(databaseName);
         dataBaseService.createMenuItemTagsTable(databaseName);
+        dataBaseService.createOrdersTable(databaseName);
+        dataBaseService.createPaymentsTable(databaseName);
 
 
         dataBaseService.createConfigTable(databaseName);
