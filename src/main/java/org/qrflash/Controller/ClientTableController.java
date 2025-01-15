@@ -1,9 +1,18 @@
 package org.qrflash.Controller;
 
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.Admin.CategoryDTO;
+import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
 import org.qrflash.DTO.TableItemDTO;
+import org.qrflash.Entity.MenuItemEntity;
+import org.qrflash.Entity.TagEntity;
+import org.qrflash.Service.Admin.CategoryService;
+import org.qrflash.Service.Admin.MenuItemsService;
+import org.qrflash.Service.Admin.TagService;
+import org.qrflash.Service.Client.ClientService;
 import org.qrflash.Service.Client.ConfigService;
 import org.qrflash.Service.DataBase.ClientDynamicDataBaseService;
+import org.qrflash.Source.Multi_tenancy.TenantContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +21,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,11 +33,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/client")
 public class ClientTableController {
 
-    @Autowired
-    private ClientDynamicDataBaseService clientDynamicDataBaseService;
-    @Autowired
-    private ConfigService configService;
-
+    private final ClientDynamicDataBaseService clientDynamicDataBaseService;
+    private final ConfigService configService;
+    private final ClientService clientService;
+    private final TagService tagService;
+    private final CategoryService categoryService;
     @GetMapping("/{est_uuid}/{qr_Code}")
     public ResponseEntity<?> getTableItems(
             @PathVariable("est_uuid") String establishmentUuid,
@@ -93,4 +104,35 @@ public class ClientTableController {
                 })
                 .collect(Collectors.toList());
     }
+
+    @GetMapping("/menu")
+    public ResponseEntity<?> getActiveMenuItems(@RequestParam("est_uuid") UUID establishmentId) {
+        try {
+            String dbName = AdminController.formatedUUid(establishmentId);
+
+            // Викликаємо новий метод, який повертає тільки активні товари
+            List<MenuItemDTO> menuItems = clientService.getActiveMenuItems(dbName);
+            // Якщо треба – тегів і категорій беремо все так само
+            List<TagEntity> tagEntity = tagService.getTags(dbName);
+            List<CategoryDTO> categoryDTO = categoryService.getCategoriesUsedByActiveMenuItems(dbName);
+            Map<String, Object> config = clientDynamicDataBaseService.getConfig(dbName);
+            Map<String, Object> activeColorScheme = getActiveColorScheme(config);
+
+            // Складаємо разом у Map (аналогічно до попереднього прикладу)
+            Map<String, Object> response = Map.of(
+                    "menu_items", menuItems,
+                    "tags", tagEntity,
+                    "categories", categoryDTO,
+                    "active_color_scheme",activeColorScheme
+            );
+
+            return ResponseEntity.ok(Map.of("data", response));
+        } catch (SQLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to fetch menu items: " + e.getMessage()));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
 }

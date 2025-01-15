@@ -36,7 +36,7 @@ public class AdminController {
     private final TagService tagService;
     private final CategoryService categoryService;
 
-    private String formatedUUid(UUID establishmentId){
+    public static String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
     }
 
@@ -45,7 +45,16 @@ public class AdminController {
     public ResponseEntity<?> getMenuItems(@RequestParam("est_uuid") UUID establishmentId) {
         try {
             List<MenuItemDTO> menuItems = menuItemsService.getMenuItems(formatedUUid(establishmentId));
-            return ResponseEntity.ok(Map.of("menu_item", menuItems));
+            List<TagEntity> tagEntity = tagService.getTags(formatedUUid(establishmentId));
+            List<CategoryDTO> categoryDTO = categoryService.getAllCategories(formatedUUid(establishmentId));
+            Map<String, Object> response = Map.of(
+                    "menu_items", menuItems,
+                    "tags", tagEntity,
+                    "categories", categoryDTO
+            );
+    
+
+            return ResponseEntity.ok(Map.of("data", response));
         } catch (SQLException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to fetch menu items: " + e.getMessage()));
@@ -95,7 +104,6 @@ public class AdminController {
                     .body(new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Помилка видалення меню: " + e.getMessage()));
         }
     }
-
     // ---------------------------
 
     // ----------Establishment Properties-------
@@ -107,37 +115,27 @@ public class AdminController {
     }
 
     @PutMapping("/establishment/{est_uuid}/properties")
-    public ResponseEntity<?> updateEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId,
-                                                           @RequestBody Map<String, String> payload) {
-        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        String name = payload.get("name");
-        String description = payload.get("description");
-        String address = payload.get("address");
-        if (name == null && address == null && description == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name' or 'address' or 'description') must be provided"));
-        }
-        configService.updateEstablishmentProperties(databaseName, name, address, description);
-        return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
-    }
+    public ResponseEntity<?> updateEstablishmentProperties(
+            @PathVariable("est_uuid") UUID establishmentId,
+            @RequestBody Map<String, Object> payload) {
 
-    @PostMapping("/establishment/{est_uuid}/properties/contact-info")
-    public ResponseEntity<?> addContactInfo(@PathVariable("est_uuid") UUID establishmentId,
-                                            @RequestBody Map<String, List<String>> payload) {
-        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        List<String> numbers = payload.get("numbers");
-        if (numbers == null || numbers.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Numbers array cannot be empty"));
-        }
-        configService.addContactInfo(databaseName, numbers);
-        return ResponseEntity.ok(Map.of("message", "Номера додані"));
-    }
+        String name = (String) payload.get("name");
+        String address = (String) payload.get("address");
+        String description = (String) payload.get("description");
+        List<String> contactInfo = (List<String>) payload.get("contact_info");
 
-    @DeleteMapping("/establishment/{est_uuid}/properties/contact-info/{index}")
-    public ResponseEntity<?> removeContactInfo(@PathVariable("est_uuid") UUID establishmentId,
-                                               @PathVariable int index) {
-        String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        configService.removeContactInfoAtIndex(databaseName, index);
-        return ResponseEntity.ok(Map.of("message", "Контактний номер видалено"));
+        if (name == null && address == null && description == null && contactInfo == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "At least one field ('name', 'address', 'description', 'contact_info') must be provided"));
+        }
+
+        try {
+                configService.updateEstablishmentProperties(formatedUUid(establishmentId), name, address, description, contactInfo);
+            return ResponseEntity.ok(Map.of("message", "Інформація по закладу успішно оновлена."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Помилка оновлення закладу: " + e.getMessage()));
+        }
     }
     // ---------------------------
 
