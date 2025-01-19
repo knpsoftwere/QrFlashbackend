@@ -29,7 +29,7 @@ public class OrderController {
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<?> createOrder(@RequestHeader("est_uuid") UUID Uuid, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestHeader UUID Uuid, @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
             String pageUrl = acquiringMonoService.createOrder(formatedUUid(Uuid), orderRequest);
