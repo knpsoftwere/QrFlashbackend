@@ -40,14 +40,14 @@ public class OrderController {
         }
     }
     @PutMapping("/setting")
-    public ResponseEntity<?> addToken(@RequestHeader UUID est_uuid, @RequestBody TokenRequest tokenRequest){
+    public ResponseEntity<?> addToken(@RequestHeader UUID Uuid, @RequestBody TokenRequest tokenRequest){
         try{
             String token = tokenRequest.getToken();
             if (token == null || token.isEmpty()) {
-                monobankPaymentService.addTokenAndPublicKey(token, formatedUUid(est_uuid), null);
+                monobankPaymentService.addTokenAndPublicKey(token, formatedUUid(Uuid), null);
                 return ResponseEntity.ok(Map.of("message", "Пустий токен збережено"));
             }
-            monobankPaymentService.createPublicKey(token, formatedUUid(est_uuid));
+            monobankPaymentService.createPublicKey(token, formatedUUid(Uuid));
             return ResponseEntity.ok("Налаштування успішно виконане");
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Помилка налаштування оплати."));
