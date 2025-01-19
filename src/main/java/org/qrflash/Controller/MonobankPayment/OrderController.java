@@ -14,8 +14,8 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/acquiring/payment")
-@CrossOrigin(origins = "https://qrflash.online")
+@RequestMapping("/acquiring")
+//@CrossOrigin(origins = "https://qrflash.online")
 public class OrderController {
 
     @Autowired
@@ -27,8 +27,8 @@ public class OrderController {
         return "est_" + establishmentId.toString().replace("-", "_");
     }
 
-    @PostMapping
-    public ResponseEntity<?> createOrder(@RequestHeader String est_uuid, @RequestBody OrderRequest orderRequest) {
+    @PostMapping("/payment")
+    public ResponseEntity<?> createOrder(@RequestHeader(value = "est_uuid") String est_uuid, @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
             String pageUrl = acquiringMonoService.createOrder(formatedUUid(est_uuid), orderRequest);
