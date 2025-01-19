@@ -12,6 +12,7 @@ import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
 import org.qrflash.Entity.TagEntity;
 import org.qrflash.Exeption.DuplicateTagException;
+import org.qrflash.JWT.JwtUtil;
 import org.qrflash.Service.Admin.CategoryService;
 import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ConfigService;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +37,7 @@ public class AdminController {
     private final ConfigService configService;
     private final TagService tagService;
     private final CategoryService categoryService;
+    private final JwtUtil jwtUtil;
 
     public static String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
@@ -378,4 +381,19 @@ public class AdminController {
         }
     }
     // ----------------------------------
+
+    @GetMapping("/personal")
+    public ResponseEntity<?>getPersonalInfo(@RequestParam("est_uuid") UUID establishmentId,
+                                            @RequestParam("token") String token){
+        try{
+            String phoneNumber = jwtUtil.getUserPhoneNumber(token);
+            Map<String, Object> response = new HashMap<>();
+            response.put("phoneNumber", phoneNumber);
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Помилка отримання персональної інформації"));
+        }
+    }
 }

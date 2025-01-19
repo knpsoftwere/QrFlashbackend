@@ -73,7 +73,7 @@ public class DataBaseService {
         String sql = """
         CREATE TABLE opening_hours (
             id SERIAL PRIMARY KEY,
-            day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
+            day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Понеділок', 'Вівторок', 'Середа', 'Четверг', 'П`ятниця', 'Субота', 'Неділя')),
             work_hours JSONB DEFAULT '{}',
             breaks JSONB DEFAULT '[]',
             status VARCHAR(10) CHECK (status IN ('open', 'closed', 'paused')) DEFAULT 'closed',
@@ -118,13 +118,13 @@ public class DataBaseService {
         String sql = """
         INSERT INTO opening_hours (day, work_hours, breaks)
         VALUES
-        ('Monday', '{}', '[]'),
-        ('Tuesday', '{}', '[]'),
-        ('Wednesday', '{}', '[]'),
-        ('Thursday', '{}', '[]'),
-        ('Friday', '{}', '[]'),
-        ('Saturday', '{}', '[]'),
-        ('Sunday', '{}', '[]')
+        ('Понеділок', '{}', '[]'),
+        ('Вівторок', '{}', '[]'),
+        ('Середа', '{}', '[]'),
+        ('Четверг', '{}', '[]'),
+        ('П`ятниця', '{}', '[]'),
+        ('Субота', '{}', '[]'),
+        ('Неділя', '{}', '[]')
         ON CONFLICT (day) DO NOTHING;
     """;
 

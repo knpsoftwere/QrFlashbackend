@@ -1,13 +1,16 @@
 package org.qrflash.JWT;
 
 import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
-    private final String SECRET_KEY = "secret";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
 
     public String generateToken(String phoneNumber) {
         return Jwts.builder()
@@ -29,6 +32,7 @@ public class JwtUtil {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
+
     public boolean isValidToken(String token) {
         try {
             // Перевірка, чи токен є дійсним
@@ -44,5 +48,19 @@ public class JwtUtil {
         return false;
     }
 
+    public String getPhoneNumberFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(SECRET_KEY.getBytes())
+                    .parseClaimsJws(token)
+                    .getBody();
 
+            // Витягуємо номер телефону з payload
+            return claims.get("phoneNumber", String.class);
+        } catch (SignatureException e) {
+            throw new RuntimeException("Invalid token signature: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Error decoding token: " + e.getMessage());
+        }
+    }
 }
