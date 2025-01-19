@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/acquiring/payment")
-//@CrossOrigin(origins = "https://qrflash.online")
+@CrossOrigin(origins = "https://qrflash.online")
 public class OrderController {
 
     @Autowired
