@@ -7,4 +7,5 @@ import java.util.List;
 public class OrderRequest {
     private List<OrderItem> items;
     private Double totalAmount;
+    private String qrCode;
 }

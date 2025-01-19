@@ -28,47 +28,6 @@ public class DynamicDatabaseService {
         String dbUrl = String.format(DB_URL_TEMPLATE, databaseName);
         return DriverManager.getConnection(dbUrl, DB_USERNAME, DB_PASSWORD);
     }
-
-//    public List<MenuItemEntity> getMenuItemsWithCategories(String databaseName) {
-//        System.out.println("Fetching menu items with categories for database: " + databaseName);
-//        String query = "SELECT mi.*, c.id as category_id, c.name as category_name, c.description as category_description " +
-//                "FROM menu_items mi " +
-//                "LEFT JOIN categories c ON mi.category_id = c.id";
-//
-//        try (Connection connection = getConnection(databaseName)) {
-//            Statement statement = connection.createStatement();
-//            ResultSet resultSet = statement.executeQuery(query);
-//
-//            List<MenuItemEntity> menuItems = new ArrayList<>();
-//
-//            while (resultSet.next()) {
-//                MenuItemEntity menuItem = new MenuItemEntity();
-//                menuItem.setId(resultSet.getLong("id"));
-//                menuItem.setName(resultSet.getString("name"));
-//                menuItem.setDescription(resultSet.getString("description"));
-//                menuItem.setActive(resultSet.getBoolean("is_active"));
-//                menuItem.setUnit(resultSet.getString("unit"));
-//                menuItem.setItemType(resultSet.getString("item_type"));
-//                menuItem.setPinned(resultSet.getBoolean("is_pinned"));
-//                menuItem.setPrice(resultSet.getDouble("price"));
-//
-//                // Заповнюємо категорію
-//                CategoryEntity category = new CategoryEntity();
-//                category.setId(resultSet.getLong("category_id"));
-//                category.setName(resultSet.getString("category_name"));
-//
-//                menuItem.setCategory(category); // Прив'язуємо категорію до товару
-//                menuItems.add(menuItem);
-//            }
-//
-//            return menuItems;
-//
-//        } catch (SQLException e) {
-//            throw new RuntimeException("Failed to fetch menu items with categories from database: " + databaseName, e);
-//        }
-//    }
-
-
     public void saveMenuItem(String databaseName, MenuItemEntity menuItemEntity) {
         String sql = "INSERT INTO menu_items " +
                 "(name, description, category, is_active, unit, item_type, is_pinned, price) " +

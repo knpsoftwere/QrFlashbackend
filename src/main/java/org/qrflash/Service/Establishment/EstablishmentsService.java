@@ -67,6 +67,9 @@ public class EstablishmentsService {
         dataBaseService.createMenuItemTagsTable(databaseName);
         dataBaseService.createOrdersTable(databaseName);
         dataBaseService.createPaymentsTable(databaseName);
+        dataBaseService.createMethod_payment(databaseName);
+        dataBaseService.createCash_register(databaseName);
+        dataBaseService.createcash_register_method_payment(databaseName);
 
 
         dataBaseService.createConfigTable(databaseName);
@@ -75,6 +78,7 @@ public class EstablishmentsService {
         dataBaseService.insertDefaultTags(databaseName);
         dataBaseService.insertDefaultCategories(databaseName);
         dataBaseService.insertDefaultMenuItems(databaseName);
+        dataBaseService.insertDefaultPaymentAndCash_register(databaseName);
 
 
         return establishment;

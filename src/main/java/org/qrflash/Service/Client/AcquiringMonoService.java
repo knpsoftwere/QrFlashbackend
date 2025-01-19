@@ -3,18 +3,15 @@ package org.qrflash.Service.Client;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
-import org.qrflash.DTO.Client.OrderItem;
 import org.qrflash.DTO.Client.OrderRequest;
 import org.qrflash.Service.DataBase.DataBaseService;
 import org.qrflash.Service.Payment.MonobankPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
+
+import java.sql.*;
+
 
 @Service
 public class AcquiringMonoService {
@@ -32,39 +29,54 @@ public class AcquiringMonoService {
         String orderItemsJson = objectMapper.writeValueAsString(orderRequest.getItems());
 
         try (Connection connection = dataBaseService.getConnection(databaseName);
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            // Валюта
-            ps.setString(1, "UAH");  // Можна зробити динамічним, якщо потрібно підтримувати інші валюти
-            // Список товарів у JSON
+            ps.setString(1, "UAH");
             ps.setString(2, orderItemsJson);
-            // Загальна сума
             ps.setDouble(3, orderRequest.getTotalAmount());
-
             ps.executeUpdate();
-            System.out.println("Замовлення створено");
 
-            // Створюємо рахунок на Monobank
-            if (orderRequest != null && orderRequest.getTotalAmount() != null) {
+            //Отримуємо Id замовлення
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                long orderId = rs.getLong(1);
+                //Створення рахунку банку
                 long totalAmount = (long) (orderRequest.getTotalAmount() * 100);
-                //monobankPaymentService.createInvoice(totalAmount);
-                JSONObject jsonObject = monobankPaymentService.createInvoice(totalAmount);
+                JSONObject jsonObject = monobankPaymentService.createInvoice(totalAmount, databaseName, orderRequest.getQrCode());
                 String invoiceId = jsonObject.getString("invoiceId");
                 String pageUrl = jsonObject.getString("pageUrl");
+
+                //Зберігаємо дані в таблицю "payments"
+                savePaymentDetails(invoiceId, pageUrl, orderId, orderRequest.getTotalAmount(), "UAH", databaseName);
                 return pageUrl;
             } else {
-                // Виводимо повідомлення про помилку або налаштовуємо значення за замовчуванням
-                System.out.println("Total amount is missing or orderRequest is null");
-                return null;
+                throw new SQLException("createOrder: Помилка збереження замовлення");
             }
-//            String invoiceId = jsonObject.getString("invoiceId");
-//            String pageUrl = jsonObject.getString("pageUrl");
-
-            // Повертаємо pageUrl клієнту
-            // Можна також зберегти invoiceId в базі, якщо потрібно
-            //return pageUrl;
         } catch (SQLException e) {
-            throw new RuntimeException("Помилка створення замовлення: " + databaseName, e);
+            throw new RuntimeException("createOrder: Помилка створення замовлення або під'єднання до бази: " + databaseName, e);
         }
     }
+
+    private void savePaymentDetails(String invoiceId, String pageUrl, Long orderId, Double amount, String currency, String databaseName) {
+        String sql = "INSERT INTO payments (order_id, invoice_id, payment_url, status, amount, current, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+
+        try (Connection connection = dataBaseService.getConnection(databaseName); // Замініть на ім'я бази
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            // Вставка значень в запит
+            ps.setLong(1, orderId); // order_id
+            ps.setString(2, invoiceId); // invoice_id
+            ps.setString(3, pageUrl); // payment_url
+            ps.setString(4, "PENDING"); // статус (можна змінити за необхідності)
+            ps.setDouble(5, amount); // amount
+            ps.setString(6, currency); // current (валюта)
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("savePaymentDetails: Помилка зберігання деталей: ", e);
+        }
+    }
+
+
 }
