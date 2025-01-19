@@ -29,10 +29,10 @@ public class OrderController {
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<?> createOrder(@RequestHeader("est_uuid") UUID est_uuid, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestHeader("est_uuid") UUID Uuid, @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
-            String pageUrl = acquiringMonoService.createOrder(formatedUUid(est_uuid), orderRequest);
+            String pageUrl = acquiringMonoService.createOrder(formatedUUid(Uuid), orderRequest);
             // Повертаємо URL для оплати клієнту
             return ResponseEntity.ok(Map.of("pageUrl", pageUrl));
         } catch (Exception e) {
