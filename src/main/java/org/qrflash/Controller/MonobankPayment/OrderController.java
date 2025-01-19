@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 
 @RestController
@@ -23,12 +24,12 @@ public class OrderController {
     @Autowired
     private MonobankPaymentService monobankPaymentService;
 
-    private String formatedUUid(String establishmentId){
+    private String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<?> createOrder(@RequestHeader(value = "est_uuid") String est_uuid, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestHeader("est_uuid") UUID est_uuid, @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
             String pageUrl = acquiringMonoService.createOrder(formatedUUid(est_uuid), orderRequest);
@@ -39,7 +40,7 @@ public class OrderController {
         }
     }
     @PutMapping("/setting")
-    public ResponseEntity<?> addToken(@RequestHeader String est_uuid, @RequestBody TokenRequest tokenRequest){
+    public ResponseEntity<?> addToken(@RequestHeader UUID est_uuid, @RequestBody TokenRequest tokenRequest){
         try{
             String token = tokenRequest.getToken();
             if (token == null || token.isEmpty()) {
