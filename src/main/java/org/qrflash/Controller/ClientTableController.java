@@ -8,6 +8,7 @@ import org.qrflash.Entity.MenuItemEntity;
 import org.qrflash.Entity.TagEntity;
 import org.qrflash.Service.Admin.CategoryService;
 import org.qrflash.Service.Admin.MenuItemsService;
+import org.qrflash.Service.Admin.PaymentService;
 import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ClientService;
 import org.qrflash.Service.Client.ConfigService;
@@ -28,6 +29,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.qrflash.Controller.AdminController.formatedUUid;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/client")
@@ -38,6 +41,8 @@ public class ClientTableController {
     private final ClientService clientService;
     private final TagService tagService;
     private final CategoryService categoryService;
+    private final PaymentService paymentService;
+
     @GetMapping("/{est_uuid}/{qr_Code}")
     public ResponseEntity<?> getTableItems(
             @PathVariable("est_uuid") String establishmentUuid,
@@ -108,7 +113,7 @@ public class ClientTableController {
     @GetMapping("/menu")
     public ResponseEntity<?> getActiveMenuItems(@RequestParam("est_uuid") UUID establishmentId) {
         try {
-            String dbName = AdminController.formatedUUid(establishmentId);
+            String dbName = formatedUUid(establishmentId);
 
             // Викликаємо новий метод, який повертає тільки активні товари
             List<MenuItemDTO> menuItems = clientService.getActiveMenuItems(dbName);
@@ -132,6 +137,20 @@ public class ClientTableController {
                     .body(Map.of("error", "Failed to fetch menu items: " + e.getMessage()));
         } finally {
             TenantContext.clear();
+        }
+    }
+
+
+    //Запити для оплати
+    @GetMapping("/pay")
+    public ResponseEntity<?> getActivePayments(@RequestHeader("Uuid") UUID establishmentId){
+        System.out.println("Метод getActivePayments викликано");
+        try{
+            List<String> paymentMethod = paymentService.getActivePaymentMethodNames(formatedUUid(establishmentId));
+            return ResponseEntity.ok(Map.of("paymentMethod", paymentMethod));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("paymentMethod:", e.getMessage()));
         }
     }
 

@@ -68,30 +68,31 @@ public class ConfigService {
     }
 
     public void updateEstablishmentProperties(String databaseName, String newName, String newAddress, String description, List<String> contactInfo) {
-        StringBuilder sql = new StringBuilder("UPDATE config SET data = jsonb_set(data, ");
-
-        // Формуємо динамічний SQL-запит
+        StringBuilder sql = new StringBuilder("UPDATE config SET data = ");
+        String baseJsonb = "data"; // Початкова JSONB структура
         List<String> updates = new ArrayList<>();
+
+        // Додавання оновлень
         if (newName != null) {
-            updates.add("'{name}', ?::jsonb");
+            baseJsonb = String.format("jsonb_set(%s, '{name}', ?::jsonb)", baseJsonb);
         }
         if (newAddress != null) {
-            updates.add("'{address}', ?::jsonb");
+            baseJsonb = String.format("jsonb_set(%s, '{address}', ?::jsonb)", baseJsonb);
         }
         if (description != null) {
-            updates.add("'{description}', ?::jsonb");
+            baseJsonb = String.format("jsonb_set(%s, '{description}', ?::jsonb)", baseJsonb);
         }
         if (contactInfo != null) {
-            updates.add("'{contact-info}', ?::jsonb");
+            baseJsonb = String.format("jsonb_set(%s, '{contact-info}', ?::jsonb)", baseJsonb);
         }
 
-        sql.append(String.join(", jsonb_set(data, ", updates));
-        sql.append(") WHERE key = 'establishment_properties';");
+        sql.append(baseJsonb);
+        sql.append(" WHERE key = 'establishment_properties';");
 
         try (Connection connection = dataBaseService.getConnection(databaseName);
              PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
-            // Додаємо значення параметрів
+            // Додавання параметрів
             int paramIndex = 1;
             if (newName != null) {
                 ps.setString(paramIndex++, "\"" + newName + "\"");
@@ -103,7 +104,6 @@ public class ConfigService {
                 ps.setString(paramIndex++, "\"" + description + "\"");
             }
             if (contactInfo != null) {
-                // Перетворення масиву у JSON-строку
                 String contactInfoJson = contactInfo.stream()
                         .map(num -> "\"" + num + "\"")
                         .collect(Collectors.joining(",", "[", "]"));
@@ -118,6 +118,7 @@ public class ConfigService {
             throw new RuntimeException("Failed to update establishment properties in database: " + databaseName, e);
         }
     }
+
     //-------------------------------
     // Методи для color_schemes
     //-------------------------------

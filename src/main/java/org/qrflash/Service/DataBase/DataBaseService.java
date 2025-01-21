@@ -248,8 +248,8 @@ public class DataBaseService {
             createOrdersTable(databaseName);
             createPaymentsTable(databaseName);
             createMethod_payment(databaseName);
-            createCash_register(databaseName);
-            createcash_register_method_payment(databaseName);
+            //createCash_register(databaseName);
+            //createcash_register_method_payment(databaseName);
 
             // Заповнення дефолтними даними
             initializeOpeningHours(databaseName);
@@ -376,17 +376,28 @@ public class DataBaseService {
 
     public void dropDatabaseIfExists(String databaseName) {
         System.out.println("dropDatabaseIfExists: Запустився");
-        String dropDbSql = "DROP DATABASE IF EXISTS " + databaseName;
-
         try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
+            // Завершуємо активні з'єднання
+            String terminateConnections = String.format(
+                    "DO $$ " +
+                            "DECLARE db_name TEXT := '%s'; " +
+                            "BEGIN " +
+                            "EXECUTE format('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ''%s'' AND pid <> pg_backend_pid()', db_name); " +
+                            "END $$;",
+                    databaseName, databaseName);
+
+            statement.execute(terminateConnections);
+
+            // Видаляємо базу
+            String dropDbSql = "DROP DATABASE IF EXISTS " + databaseName;
             statement.executeUpdate(dropDbSql);
             System.out.println("dropDatabaseIfExists: База даних успішно видалена (якщо існувала).");
 
         } catch (SQLException e) {
             System.out.println("dropDatabaseIfExists: Попередження: Неможливо видалити базу, вона може не існувати.");
-            // Не кидаємо RuntimeException, просто логування
+            e.printStackTrace();
         }
     }
 
@@ -465,48 +476,48 @@ public class DataBaseService {
         }
     }
 
-    //Ствоерння таблиці createCash_register
-    public void createCash_register (String databaseName){
-        System.out.println("createCash_register: Запуск");
-        String createCash_register = """
-                CREATE TABLE cash_register (
-                      id SERIAL PRIMARY KEY,
-                      name VARCHAR(100) NOT NULL
-                  );
-                """;
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
-             Statement statement = connection.createStatement()) {
-
-            statement.executeUpdate(createCash_register);
-            System.out.println("createPaymentsTable: Таблиця `payments` успішно створена в базі");
-
-        } catch (SQLException e) {
-            throw new RuntimeException("createPaymentsTable: Помилка створення таблиці `payments` у базі", e);
-        }
-    }
-
-    //Ствоерння таблиці createcash_register_method_payment
-    public void createcash_register_method_payment(String databaseName){
-        System.out.println("createcash_register_method_payment: Запуск");
-        String createcash_register_method_payment = """
-                CREATE TABLE cash_register_method_payment (
-                      cash_register_id INT NOT NULL,
-                      method_payment_id INT NOT NULL,
-                      PRIMARY KEY (cash_register_id, method_payment_id),
-                      FOREIGN KEY (cash_register_id) REFERENCES cash_register (id),
-                      FOREIGN KEY (method_payment_id) REFERENCES method_payment (id)
-                  );
-                """;
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
-             Statement statement = connection.createStatement()) {
-
-            statement.executeUpdate(createcash_register_method_payment);
-            System.out.println("createPaymentsTable: Таблиця `payments` успішно створена в базі");
-
-        } catch (SQLException e) {
-            throw new RuntimeException("createPaymentsTable: Помилка створення таблиці `payments` у базі", e);
-        }
-    }
+//    //Ствоерння таблиці createCash_register
+//    public void createCash_register (String databaseName){
+//        System.out.println("createCash_register: Запуск");
+//        String createCash_register = """
+//                CREATE TABLE cash_register (
+//                      id SERIAL PRIMARY KEY,
+//                      name VARCHAR(100) NOT NULL
+//                  );
+//                """;
+//        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+//             Statement statement = connection.createStatement()) {
+//
+//            statement.executeUpdate(createCash_register);
+//            System.out.println("createPaymentsTable: Таблиця `payments` успішно створена в базі");
+//
+//        } catch (SQLException e) {
+//            throw new RuntimeException("createPaymentsTable: Помилка створення таблиці `payments` у базі", e);
+//        }
+//    }
+//
+//    //Ствоерння таблиці createcash_register_method_payment
+//    public void createcash_register_method_payment(String databaseName){
+//        System.out.println("createcash_register_method_payment: Запуск");
+//        String createcash_register_method_payment = """
+//                CREATE TABLE cash_register_method_payment (
+//                      cash_register_id INT NOT NULL,
+//                      method_payment_id INT NOT NULL,
+//                      PRIMARY KEY (cash_register_id, method_payment_id),
+//                      FOREIGN KEY (cash_register_id) REFERENCES cash_register (id),
+//                      FOREIGN KEY (method_payment_id) REFERENCES method_payment (id)
+//                  );
+//                """;
+//        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+//             Statement statement = connection.createStatement()) {
+//
+//            statement.executeUpdate(createcash_register_method_payment);
+//            System.out.println("createPaymentsTable: Таблиця `payments` успішно створена в базі");
+//
+//        } catch (SQLException e) {
+//            throw new RuntimeException("createPaymentsTable: Помилка створення таблиці `payments` у базі", e);
+//        }
+//    }
 
     public void insertDefaultPaymentAndCash_register(String databaseName){
         System.out.println("insertDefaultPaymentAndCash_register: Запустився");
@@ -515,10 +526,10 @@ public class DataBaseService {
                 VALUES('Monobank', TRUE, '{"token": "XXX"}');
         """;
 
-        String insertCashRegister = """
-            INSERT INTO cash_register (name)
-                    VALUES ('Main Cash Desk');
-        """;
+//        String insertCashRegister = """
+//            INSERT INTO cash_register (name)
+//                    VALUES ('Main Cash Desk');
+//        """;
 
 
 
@@ -526,7 +537,7 @@ public class DataBaseService {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(insertMethodPayment);
-            statement.executeUpdate(insertCashRegister);
+            //statement.executeUpdate(insertCashRegister);
             System.out.println("insertDefaultPaymentAndCash_register: Дефолтні оплати і каса створена");
 
         } catch (SQLException e) {

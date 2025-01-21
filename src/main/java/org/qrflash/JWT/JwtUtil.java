@@ -47,20 +47,4 @@ public class JwtUtil {
         }
         return false;
     }
-
-    public String getPhoneNumberFromToken(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY.getBytes())
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            // Витягуємо номер телефону з payload
-            return claims.get("phoneNumber", String.class);
-        } catch (SignatureException e) {
-            throw new RuntimeException("Invalid token signature: " + e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException("Error decoding token: " + e.getMessage());
-        }
-    }
 }

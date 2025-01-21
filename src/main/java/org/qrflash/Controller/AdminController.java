@@ -3,6 +3,7 @@ package org.qrflash.Controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.qrflash.DTO.Admin.CategoryDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemCreateDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
@@ -14,12 +15,14 @@ import org.qrflash.Entity.TagEntity;
 import org.qrflash.Exeption.DuplicateTagException;
 import org.qrflash.JWT.JwtUtil;
 import org.qrflash.Service.Admin.CategoryService;
+import org.qrflash.Service.Admin.PaymentService;
 import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ConfigService;
 import org.qrflash.Service.Admin.MenuItemsService;
 import org.qrflash.Source.Multi_tenancy.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
@@ -38,6 +41,7 @@ public class AdminController {
     private final TagService tagService;
     private final CategoryService categoryService;
     private final JwtUtil jwtUtil;
+    private final PaymentService paymentService;
 
     public static String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
@@ -394,6 +398,31 @@ public class AdminController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Помилка отримання персональної інформації"));
+        }
+    }
+
+    //Запити по оплаті
+    @GetMapping("/payments")
+    public ResponseEntity<?> getPayments(@RequestHeader("Uuid") UUID establishmentId){
+        try{
+            List<Map<String, Object>> paymentMethod = paymentService.getPaymentMethods(formatedUUid(establishmentId));
+            return ResponseEntity.ok(Map.of("paymentMethod", paymentMethod));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("cashregister:", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/payments")
+    public ResponseEntity<?> refactorPayment(@RequestHeader("Uuid") UUID establishmentId,
+                                             @RequestParam("id") Long id,
+                                             @RequestParam("isActive") boolean iaActive){
+        try {
+            paymentService.refactorPaymentActive(formatedUUid(establishmentId), id, iaActive);
+            return ResponseEntity.ok("Успішно змінено!");
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Помилка змінення статусу активності");
         }
     }
 }

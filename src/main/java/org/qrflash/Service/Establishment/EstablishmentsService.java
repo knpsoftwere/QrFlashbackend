@@ -68,8 +68,8 @@ public class EstablishmentsService {
         dataBaseService.createOrdersTable(databaseName);
         dataBaseService.createPaymentsTable(databaseName);
         dataBaseService.createMethod_payment(databaseName);
-        dataBaseService.createCash_register(databaseName);
-        dataBaseService.createcash_register_method_payment(databaseName);
+        //dataBaseService.createCash_register(databaseName);
+        //dataBaseService.createcash_register_method_payment(databaseName);
 
 
         dataBaseService.createConfigTable(databaseName);
