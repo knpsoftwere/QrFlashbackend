@@ -2,7 +2,7 @@ name: Remote Dispatch Deploy
 
 on:
   push:
-    branches: [ main ] # або master, залежно від вашої головної гілки
+    branches: [ master ] # або master, залежно від вашої головної гілки
 
 jobs:
   deploy:
