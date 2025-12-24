@@ -13,6 +13,30 @@ services:
     networks:
       - app-net
 
+  frontend:
+    image: violturorg/qr-frontend:latest
+    container_name: frontend
+    restart: always
+    volumes:
+      - frontend_data:/usr/share/nginx/html
+    networks:
+      - app-net
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - frontend_data:/usr/share/nginx/html:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-net
+
   dataBase:
     image: postgres:17
     container_name: postgres17Dev
@@ -32,6 +56,7 @@ services:
 
 volumes:
   postgres_data:
+  frontend_data:
 
 networks:
   app-net:

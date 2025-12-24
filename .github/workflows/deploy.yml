@@ -38,3 +38,4 @@ jobs:
             git pull origin master
             docker compose pull backend
             docker compose up -d --build
+            docker exe nginx_proxy nginx -s reload
