@@ -35,6 +35,6 @@ jobs:
           key: ${{ secrets.HIKINO_KEYAWS }}
           script: |
             cd "$HOME/project/startUp"
-            git pull origin main
+            git pull origin master
             docker compose pull backend
             docker compose up -d --build
