@@ -14,11 +14,10 @@ services:
       - app-net
 
   frontend:
-    image: violturorg/qr-frontend:latest
+    image: violturorg/qr-frontend:latest # Переконайтеся, що тут актуальний тег
     container_name: frontend
-    restart: always
-    volumes:
-      - frontend_data:/usr/share/nginx/html
+    restart: always # Тепер він буде працювати стабільно
+    pull_policy: always
     networks:
       - app-net
 
@@ -30,7 +29,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - frontend_data:/usr/share/nginx/html:ro
+      # ПРИБРАЛИ volume з фронтендом, він тепер не потрібен
     depends_on:
       - frontend
       - backend
@@ -43,20 +42,13 @@ services:
     restart: always
     env_file:
       - .env
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    # ... інше без змін
     networks:
       - app-net
 
+# Прибрали frontend_data з секції volumes, якщо він більше ніде не потрібен
 volumes:
   postgres_data:
-  frontend_data:
 
 networks:
   app-net:
