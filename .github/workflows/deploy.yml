@@ -5,14 +5,30 @@ on:
     branches: [ master ] # або master, залежно від вашої головної гілки
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Executing remote ssh commands using password
-        uses: appleboy/ssh-action@master
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: violturorg/startup-backend:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Update
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
@@ -20,4 +36,5 @@ jobs:
           script: |
             cd "$HOME/project/startUp"
             git pull origin main
+            docker compose pull backend
             docker compose up -d --build

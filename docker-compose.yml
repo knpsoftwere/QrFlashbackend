@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  backend:
+    image: violturorg/startup-backend:latest
+    container_name: backend
+    restart: always
+    pull_policy: always
+    depends_on:
+      - dataBase
+    env_file:
+      - .env
+    networks:
+      - app-net
+
   dataBase:
     image: postgres:17
     container_name: postgres17Dev
