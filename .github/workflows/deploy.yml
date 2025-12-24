@@ -18,6 +18,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.HIKINO_KEYAWS }}
           script: |
-            cd ~/project/startUp
+            cd "$HOME/project/startUp"
             git pull origin main
             docker compose up -d --build
