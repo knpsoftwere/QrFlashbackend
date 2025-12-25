@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/admin/table")
-@CrossOrigin(origins = "https://qrflash.online")
+@RequestMapping("/api/admin/table")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class TableController {
 

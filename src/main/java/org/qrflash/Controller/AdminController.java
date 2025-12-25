@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "https://qrflash.online")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 public class AdminController {
     private final MenuItemsService menuItemsService;
     private final ConfigService configService;

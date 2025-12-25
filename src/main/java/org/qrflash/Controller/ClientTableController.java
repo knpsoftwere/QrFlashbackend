@@ -33,7 +33,7 @@ import static org.qrflash.Controller.AdminController.formatedUUid;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/client")
+@RequestMapping("/api/client")
 public class ClientTableController {
 
     private final ClientDynamicDataBaseService clientDynamicDataBaseService;
