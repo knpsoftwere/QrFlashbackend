@@ -21,7 +21,7 @@ public class DataBaseService {
     private String DB_PASSWORD;
 
     public Connection getConnection(String databaseName) throws SQLException {
-        return DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        return DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
     }
     //Створення самої бази даних
     public void createDatabase(String databaseName) {

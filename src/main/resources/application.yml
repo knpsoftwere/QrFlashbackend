@@ -17,6 +17,9 @@ spring:
     change-log: classpath:/liquibase/master-main.yml
     enabled: true
 
+tenant:
+  db-url-template: "jdbc:postgresql://dataBase:5432/%s"
+
 server:
   port: 8080
 
@@ -25,5 +28,5 @@ jwt:
 
 custom:
   datasource:
-    urlConn: ${SPRING_DATASOURCE_URL_CONN}
+    urlConn: "jdbc:postgresql://dataBase:5432/%s"
 

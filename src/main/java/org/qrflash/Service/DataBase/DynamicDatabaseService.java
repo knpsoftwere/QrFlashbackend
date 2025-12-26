@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.TableItemDTO;
 import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import java.sql.*;
@@ -20,9 +21,13 @@ public class DynamicDatabaseService {
     @PersistenceContext
     private EntityManager entityManager;
     private final JdbcTemplate jdbcTemplate;
-    private static final String DB_URL_TEMPLATE = "jdbc:postgresql://138.201.118.129:5432/%s";
-    private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "R3cv77m6F3Ys6MfV";
+
+    @Value("${custom.datasource.urlConn}")
+    private String DB_URL_TEMPLATE;
+    @Value("${spring.datasource.username}")
+    private String DB_USERNAME;
+    @Value("${spring.datasource.password}")
+    private String DB_PASSWORD;
 
     public Connection getConnection(String databaseName) throws SQLException {
         String dbUrl = String.format(DB_URL_TEMPLATE, databaseName);
@@ -96,7 +101,7 @@ public class DynamicDatabaseService {
             throw new RuntimeException("Failed to update menu item in database: " + databaseName, e);
         }
     }
-
+    //todo Created Table_item
     public void ensureTableExists(String databaseName) {
         String sql = "CREATE TABLE IF NOT EXISTS table_items (" +
                 "id SERIAL PRIMARY KEY, " +

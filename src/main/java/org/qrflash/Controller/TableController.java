@@ -3,6 +3,7 @@ package org.qrflash.Controller;
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.TableItemDTO;
 import org.qrflash.Service.DataBase.DynamicDatabaseService;
+import org.qrflash.Service.DataBase.LiquibaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class TableController {
+    private final LiquibaseService liquibaseService;
 
     @Autowired
     private DynamicDatabaseService dynamicDatabaseService;
@@ -25,6 +27,7 @@ public class TableController {
     public ResponseEntity<?> getAllTables(@PathVariable("est_uuid") UUID establishmentUuid) {
         try {
             String databaseName = "est_" + establishmentUuid.toString().replace("-", "_");
+            liquibaseService.runLiquibaseForTenant(databaseName);
             Map<String, Object> tables = dynamicDatabaseService.getAllTables(databaseName);
             return ResponseEntity.ok(tables);
         } catch (Exception e) {
