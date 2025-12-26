@@ -14,8 +14,8 @@ import java.util.UUID;
 @Data
 public class EstablishmentsEntity {
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @UuidGenerator
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "uuid", updatable = false, nullable = false, columnDefinition = "UUID DEFAULT gen_random_uuid()")
     private UUID uuid;
 
     @Column(nullable = false)
