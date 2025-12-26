@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name="establishments")
+@Table(name="establishments", schema = "personal")
 @Data
 public class EstablishmentsEntity {
     @Id
@@ -22,10 +22,11 @@ public class EstablishmentsEntity {
     private String name;
 
     @Column(nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
+            schema = "personal",
             name = "establishment_admins",
             joinColumns = @JoinColumn(name = "establishment_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")

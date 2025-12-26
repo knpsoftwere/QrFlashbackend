@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
@@ -33,8 +33,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> createNewUser (@RequestBody RegistrationUserDTO registrationUserDTO) {
+        //todo Винести в сервіс
+        //todo Перевести логінацію на sf4j
         //Перевірна, чи існує користувач із таким номером телефону
         if(userService.findByPhone(registrationUserDTO.getPhoneNumber()).isPresent()){
+            //Шаблонізувати виведення помилок через exception
             return new ResponseEntity<>(new AppError(HttpStatus.BAD_REQUEST.value(),
                     "Користувач з таким іменем вже існує"),
                     HttpStatus.BAD_REQUEST);

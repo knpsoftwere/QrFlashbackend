@@ -2,6 +2,8 @@ package org.qrflash.Service.DataBase;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -11,9 +13,12 @@ public class DataBaseService {
     @PersistenceContext
     private EntityManager em;
 
-    private static final String DB_URL = "jdbc:postgresql://138.201.118.129:5432/";
-    private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "R3cv77m6F3Ys6MfV";
+    @Value("${custom.datasource.urlConn}")
+    private String DB_URL;
+    @Value("${spring.datasource.username}")
+    private String DB_USERNAME;
+    @Value("${spring.datasource.password}")
+    private String DB_PASSWORD;
 
     public Connection getConnection(String databaseName) throws SQLException {
         return DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);

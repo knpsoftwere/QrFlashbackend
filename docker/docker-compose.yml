@@ -2,18 +2,23 @@ version: '3.8'
 
 services:
   backend:
-    image: violturorg/startup-backend:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: backend
     restart: always
     pull_policy: always
+    ports:
+      - "0.0.0.0:8080:8080"
     depends_on:
       - dataBase
     env_file:
       - .env
     environment:
-      - SPRING_DATASOURCE_URL=${DB_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_URL_CONN=${DATABASE_URL_PROD_CONN}
+      - SPRING_DATASOURCE_URL=${DATABASE_URL_PROD}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - app-net
 
@@ -25,20 +30,6 @@ services:
     networks:
       - app-net
 
-  nginx:
-    image: nginx:stable-alpine
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d:ro
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - app-net
-
   dataBase:
     image: postgres:17
     container_name: postgres17Dev
@@ -47,7 +38,6 @@ services:
       - "5432:5432"
     env_file:
       - .env
-    # ... інше без змін
     networks:
       - app-net
 

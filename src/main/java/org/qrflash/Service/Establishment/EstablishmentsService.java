@@ -44,7 +44,7 @@ public class EstablishmentsService {
         EstablishmentsEntity establishment = new EstablishmentsEntity();
         establishment.setName("Заклад 1");
         establishment.setLanguage("ua");
-        establishment.setCreated_at(LocalDateTime.now());
+        establishment.setCreatedAt(LocalDateTime.now());
         establishment.setStatus("active");
 
         //Додаємо адміна

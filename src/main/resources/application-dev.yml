@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: DevQrFlash
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:/liquibase/master-main.yml
+    enabled: true
+
+#tenant:
+#  db-url-template: jdbc:postgresql://localhost:5432/{db}
+
+server:
+  port: 8081
+  address: 0.0.0.0
+
+jwt:
+  secret: xQATcBPX8Tgin165cvwlRr1d16rRPUdZho2YJlv09tg=
+
+custom:
+  datasource:
+    urlConn: ${DATABASE_URL_DEV}
