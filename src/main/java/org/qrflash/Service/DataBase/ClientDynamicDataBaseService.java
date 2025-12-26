@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.TableItemDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,9 +15,12 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class ClientDynamicDataBaseService {
-    private static final String DB_URL_TEMPLATE = "jdbc:postgresql://138.201.118.129:5432/%s";
-    private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "R3cv77m6F3Ys6MfV";
+    @Value("${custom.datasource.urlConn}")
+    private String DB_URL_TEMPLATE;
+    @Value("${spring.datasource.username}")
+    private String DB_USERNAME;
+    @Value("${spring.datasource.password}")
+    private String DB_PASSWORD;
 
     private Connection getConnection(String databaseName) throws SQLException {
         String dbUrl = String.format(DB_URL_TEMPLATE, databaseName);
@@ -40,7 +44,7 @@ public class ClientDynamicDataBaseService {
     }
 
     public boolean doesDatabaseExist(String databaseName) {
-        String dbUrl = String.format(DB_URL_TEMPLATE, "postgres"); // або інша системна БД
+        String dbUrl = String.format(DB_URL_TEMPLATE, "postgresDb"); // або інша системна БД
         String sql = "SELECT 1 FROM pg_database WHERE datname = ?";
 
         try (Connection connection = DriverManager.getConnection(dbUrl, DB_USERNAME, DB_PASSWORD);
