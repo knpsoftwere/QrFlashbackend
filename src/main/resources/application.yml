@@ -30,3 +30,8 @@ custom:
   datasource:
     urlConn: "jdbc:postgresql://dataBase:5432/%s"
 
+minio:
+  url: ${MINIO_ROOT_URL}
+  accessKey: ${MINIO_ROOT_USER}
+  secretKey: ${MINIO_ROOT_PASSWORD}
+  bucket: ${MINIO_ROOT_BUCKET}

@@ -1,3 +1,4 @@
 Refactor tasks:
 1. Add docker
 2. Change the properties file to yaml
+3. Delete this fucking est_ in database

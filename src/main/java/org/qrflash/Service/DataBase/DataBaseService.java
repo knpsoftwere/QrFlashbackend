@@ -30,7 +30,7 @@ public class DataBaseService {
                 " WITH ENCODING 'UTF8' LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template0";
         String dropDbSql = "DROP DATABASE IF EXISTS " + databaseName;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, "postgres"), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             System.out.println("createDatabase: База даних видалена : " + databaseName);
@@ -62,7 +62,7 @@ public class DataBaseService {
           );
         """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             System.out.println("createMenuItemTable: Створена Таблиця MenuItemTable");
@@ -86,7 +86,7 @@ public class DataBaseService {
         );
     """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
@@ -106,7 +106,7 @@ public class DataBaseService {
         ('Товар 1', 'example.png', 'Стандартний товар для тесту', 'kg', 'warh', 50.0, 1);
         """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             System.out.println("insertDefaultMenuItems: Стандартні товари для таблиці створені");
@@ -133,7 +133,7 @@ public class DataBaseService {
         ON CONFLICT (day) DO NOTHING;
     """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
@@ -155,7 +155,7 @@ public class DataBaseService {
         );
         """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             System.out.println("createConfigTable: Створюємо таблицю config");
@@ -208,7 +208,7 @@ public class DataBaseService {
     private void insertConfigRow(String databaseName, String key, String jsonData) {
         System.out.println("insertConfigRow: Запустився");
         String sql = "INSERT INTO config (key, data) VALUES (?, ?::jsonb)";
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setString(1, key);
@@ -229,7 +229,7 @@ public class DataBaseService {
 
         // Створюємо нову базу даних
         String createDbSql = "CREATE DATABASE " + databaseName;
-        try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, "postgres"), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createDbSql);
@@ -283,7 +283,7 @@ public class DataBaseService {
             );
             """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createTagsSQL);
@@ -305,7 +305,7 @@ public class DataBaseService {
         );
     """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createMenuItemTagsSQL);
@@ -327,7 +327,7 @@ public class DataBaseService {
         ON CONFLICT (name) DO NOTHING;
     """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(insertTagsSQL);
@@ -349,7 +349,7 @@ public class DataBaseService {
           );
     """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createCategoriesSQL);
@@ -368,7 +368,7 @@ public class DataBaseService {
             ON CONFLICT (name) DO NOTHING;
         """;
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(insertCategoriesSQL);
@@ -381,7 +381,7 @@ public class DataBaseService {
 
     public void dropDatabaseIfExists(String databaseName) {
         System.out.println("dropDatabaseIfExists: Запустився");
-        try (Connection connection = DriverManager.getConnection(DB_URL + "postgres", DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, "postgres"), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             // Завершуємо активні з'єднання
@@ -420,7 +420,7 @@ public class DataBaseService {
                     updated_at TIMESTAMP DEFAULT NOW()
                 );
                 """;
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createOrdersTable);
@@ -448,7 +448,7 @@ public class DataBaseService {
                     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
                 );""";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createPaymentsTable);
@@ -470,7 +470,7 @@ public class DataBaseService {
                     json_setting JSONB                
                 );
                 """;
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createMethodpayment);
@@ -538,7 +538,7 @@ public class DataBaseService {
 
 
 
-        try (Connection connection = DriverManager.getConnection(DB_URL + databaseName, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(insertMethodPayment);

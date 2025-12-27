@@ -18,6 +18,10 @@ services:
       - SPRING_DATASOURCE_URL=${DATABASE_URL_PROD}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - MINIO_ROOT_URL=${MINIO_URL}
+      - MINIO_ROOT_USER=${MINIO_ACCESS}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET}
+      - MINIO_ROOT_BUCKET=${MINIO_BUCKET}
     networks:
       - app-net
 
@@ -39,9 +43,31 @@ services:
       - .env
     networks:
       - app-net
+    depends_on:
+      - minio
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      - MINIO_ROOT_URL=${MINIO_URL}
+      - MINIO_ROOT_USER=${MINIO_ACCESS}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET}
+      - MINIO_ROOT_BUCKET=${MINIO_BUCKET}
+    command: server ~/minio --console-address :9090
+    ports:
+      - '9090:9090'
+      - '9000:9000'
+    volumes:
+      - minio_data:/data
+    networks:
+      - app-net
 
 volumes:
   postgres_data:
+
+  minio_data:
+    driver: local
 
 networks:
   app-net:

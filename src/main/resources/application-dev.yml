@@ -30,3 +30,9 @@ jwt:
 custom:
   datasource:
     urlConn: "jdbc:postgresql://localhost:5432/%s"
+
+minio:
+  url: ${MINIO_URL}
+  accessKey: ${MINIO_ACCESS}
+  secretKey: ${MINIO_SECRET}
+  bucket: ${MINIO_BUCKET}
