@@ -68,6 +68,8 @@ services:
     command: server ~/minio --console-address :9090
     volumes:
       - minio_data:/data
+    networks:
+      - app-net
 
 volumes:
   postgres_data:
