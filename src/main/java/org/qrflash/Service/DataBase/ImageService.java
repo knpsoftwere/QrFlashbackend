@@ -84,6 +84,9 @@ public class ImageService {
 
     public String generatePresignedUrl(String filename) {
         try{
+            if (filename.isEmpty() || filename == null || filename.equals("example.png")) {
+                return "";
+            }
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
