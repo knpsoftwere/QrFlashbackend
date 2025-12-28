@@ -57,7 +57,7 @@ public class ImageService {
     private String generateFileName(MultipartFile file, String database, Long productId){
         String extension = getExtension(file);
         String fileName = productId + "."  + extension;
-        String fullName = "/" + database + "/" + fileName;
+        String fullName = database + "/" + fileName;
         return fullName;
     }
 
@@ -96,7 +96,7 @@ public class ImageService {
                             .build()
             );
 
-            return url.replace("http://minio:9000", "http://51.21.255.211/qrflash-images");
+            return url.replace("http://minio:9000", "http://51.21.255.211");
         }catch(Exception e){
             throw  new RuntimeException("Error creating bucket", e);
         }
