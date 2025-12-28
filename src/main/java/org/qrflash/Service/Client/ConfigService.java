@@ -70,7 +70,6 @@ public class ConfigService {
     public void updateEstablishmentProperties(String databaseName, String newName, String newAddress, String description, List<String> contactInfo) {
         StringBuilder sql = new StringBuilder("UPDATE config SET data = ");
         String baseJsonb = "data"; // Початкова JSONB структура
-        List<String> updates = new ArrayList<>();
 
         // Додавання оновлень
         if (newName != null) {
