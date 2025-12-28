@@ -8,6 +8,7 @@ import org.qrflash.DTO.Admin.CategoryDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemCreateDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemUpdateDTO;
+import org.qrflash.DTO.Admin.establishment.EstablishmentConfigDTO;
 import org.qrflash.DTO.AppError;
 import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
@@ -117,7 +118,7 @@ public class AdminController {
     @GetMapping("/establishment/{est_uuid}/properties")
     public ResponseEntity<?> getEstablishmentProperties(@PathVariable("est_uuid") UUID establishmentId) {
         String databaseName = "est_" + establishmentId.toString().replace("-", "_");
-        Map<String, Object> props = configService.getEstablishmentProperties(databaseName);
+        EstablishmentConfigDTO props = configService.getEstablishmentProperties(databaseName);
         return ResponseEntity.ok(Map.of("properties", props));
     }
 

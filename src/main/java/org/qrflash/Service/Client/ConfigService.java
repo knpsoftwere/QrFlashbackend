@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.Admin.establishment.EstablishmentConfigDTO;
 import org.qrflash.Service.DataBase.DataBaseService;
 import org.springframework.stereotype.Service;
 
@@ -56,12 +57,11 @@ public class ConfigService {
         }
     }
 
-    public Map<String, Object> getEstablishmentProperties(String databaseName) {
-        String jsonString = getConfigData(databaseName, "establishment_properties");; // як і раніше дістаємо JSON
+    public EstablishmentConfigDTO getEstablishmentProperties(String databaseName) {
+        String jsonString = getConfigData(databaseName, "establishment_properties"); // як і раніше дістаємо JSON
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            Map<String, Object> map = objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>(){});
-            return map;
+            return objectMapper.readValue(jsonString, EstablishmentConfigDTO.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse JSON for establishment properties", e);
         }
