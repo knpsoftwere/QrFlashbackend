@@ -46,20 +46,9 @@ public class RefMenuItemsService {
 
     @Transactional(readOnly = true)
     public void getImageById(UUID establishmentId, Long id, HttpServletResponse response) {
-        String database = AdminController.formatedUUid(establishmentId);
-        String fileName = menuItemRepository.getImageNameByMenuId(database, id);
-        try{
-            //String fullPath = "/" + fileName + "/" + id;
-            InputStream imageStream = imageService.download(fileName);
-            try{
-                response.setContentType("image/png");
-                IOUtils.copy(imageStream, response.getOutputStream());
-                response.flushBuffer();
-            }catch (Exception e){
 
-            }
-        }catch (Exception e){
-            throw new ResourceNotFoundException("001");
-        }
+    }
+
+    public void getImageForPage() {
     }
 }

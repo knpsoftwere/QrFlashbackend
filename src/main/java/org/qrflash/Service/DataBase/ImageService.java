@@ -1,6 +1,7 @@
 package org.qrflash.Service.DataBase;
 
 import io.minio.*;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -80,4 +82,18 @@ public class ImageService {
                 .build());
     }
 
+    public String generatePresignedUrl(String filename) {
+        try{
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(minioProperties.getBucket())
+                            .object(filename)
+                            .expiry(15, TimeUnit.MINUTES)
+                            .build()
+            );
+        }catch(Exception e){
+            throw  new RuntimeException("Error creating bucket", e);
+        }
+    }
 }

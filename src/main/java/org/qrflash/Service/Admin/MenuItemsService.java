@@ -7,6 +7,7 @@ import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemUpdateDTO;
 import org.qrflash.DTO.Admin.TagsDTO;
 import org.qrflash.Service.DataBase.DynamicDatabaseService;
+import org.qrflash.Service.DataBase.ImageService;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -16,6 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class MenuItemsService {
     private final DynamicDatabaseService dynamicDatabaseService;
+    private final ImageService imageService;
 
     public Long addMenuItem(String databaseName, MenuItemCreateDTO menuItemCreateDTO) {
         if (isMenuItemNameExists(databaseName, menuItemCreateDTO.getName())) {
@@ -325,7 +327,8 @@ public class MenuItemsService {
                         dto.setIsActive(resultSet.getBoolean("is_active"));
                         dto.setIsPinned(resultSet.getBoolean("is_pinned"));
                         dto.setIsQuantity(resultSet.getBoolean("is_quantity"));
-                        dto.setPhoto(resultSet.getString("photo"));
+                        //dto.setPhoto(resultSet.getString("photo"));
+                        dto.setPhoto(imageService.generatePresignedUrl(resultSet.getString("photo")));
 
                         // Додаємо категорію
                         if (resultSet.getObject("category_id") != null) {
