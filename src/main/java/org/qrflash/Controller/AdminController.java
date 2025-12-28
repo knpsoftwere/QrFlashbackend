@@ -388,10 +388,9 @@ public class AdminController {
     // ----------------------------------
 
     @GetMapping("/personal")
-    public ResponseEntity<?>getPersonalInfo(@RequestParam("est_uuid") UUID establishmentId,
-                                            @RequestParam("token") String token){
+    public ResponseEntity<?>getPersonalInfo(@RequestHeader("Authorization") String token){
         try{
-            String phoneNumber = jwtUtil.getUserPhoneNumber(token);
+            String phoneNumber = jwtUtil.getUserPhoneNumber(token.substring(7));
             Map<String, Object> response = new HashMap<>();
             response.put("phoneNumber", phoneNumber);
             return ResponseEntity.ok(response);
