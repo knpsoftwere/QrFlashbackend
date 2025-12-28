@@ -83,7 +83,7 @@ public class ConfigService {
             baseJsonb = String.format("jsonb_set(%s, '{description}', ?::jsonb)", baseJsonb);
         }
         if (contactInfo != null) {
-            baseJsonb = String.format("jsonb_set(%s, '{contact-info}', ?::jsonb)", baseJsonb);
+            baseJsonb = String.format("jsonb_set(%s, '{contact_info}', ?::jsonb)", baseJsonb);
         }
 
         sql.append(baseJsonb);
