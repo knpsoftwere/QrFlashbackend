@@ -1,5 +1,6 @@
 package org.qrflash.DTO.Admin.establishment;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -13,5 +14,6 @@ public class EstablishmentConfigDTO {
 
 
     @JsonProperty("contact_info")
+    @JsonAlias("contact-info")
     private List<Object>[] contactInfo;
 }
