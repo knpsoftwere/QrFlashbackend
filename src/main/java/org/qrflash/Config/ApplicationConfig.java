@@ -14,7 +14,7 @@ public class ApplicationConfig {
     @Bean
     public MinioClient minioClient() {
         return MinioClient.builder()
-                .endpoint(minioProperties.getUrl())
+                .endpoint("http://51.21.255.211")
                 .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
                 .build();
     }
