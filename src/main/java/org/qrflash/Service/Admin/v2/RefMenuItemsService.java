@@ -40,6 +40,7 @@ public class RefMenuItemsService {
             }
         }catch (Exception e){
             //todo Exception
+            log.error("Save image name error");
             throw new RuntimeException("", e);
         }
     }
