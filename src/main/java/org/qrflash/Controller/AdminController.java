@@ -76,9 +76,9 @@ public class AdminController {
             @RequestBody MenuItemCreateDTO menuItemCreateDTO) {
         try {
             String databaseName = formatedUUid(establishmentId);
-            menuItemsService.addMenuItem(databaseName, menuItemCreateDTO);
+            Long product_id = menuItemsService.addMenuItem(databaseName, menuItemCreateDTO);
 
-            return ResponseEntity.ok(Map.of("message", "Товар успішно створено"));
+            return ResponseEntity.ok(Map.of("message", "Товар успішно створено", "product_id", product_id));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
