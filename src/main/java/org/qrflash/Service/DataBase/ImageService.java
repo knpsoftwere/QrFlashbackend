@@ -87,7 +87,7 @@ public class ImageService {
             if (filename.isEmpty() || filename == null || filename.equals("example.png")) {
                 return "";
             }
-            return minioClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(minioProperties.getBucket())
@@ -96,7 +96,7 @@ public class ImageService {
                             .build()
             );
 
-            //return url.replace("http://minio:9000", "http://51.21.255.211");
+            return url.replace("http://minio:9000", "http://51.21.255.211/qrflash-images");
         }catch(Exception e){
             throw  new RuntimeException("Error creating bucket", e);
         }
