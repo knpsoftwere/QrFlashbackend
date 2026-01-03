@@ -22,18 +22,18 @@ public class MenuAdminController {
     private final ImageService imageService;
     private final RefMenuItemsService refMenuItemsService;
 
-    @PostMapping("/menu/image/{establishmentId}/{id}")
-    public ResponseEntity<?> uploadImage(@PathVariable UUID establishmentId,
-                                         @PathVariable Long id,
+    @PostMapping("/menu/image")
+    public ResponseEntity<?> uploadImage(@RequestParam("establishment") UUID establishmentId,
+                                         @RequestParam("id") Long id,
                                          @RequestParam("image")MultipartFile image){
         String fullName = imageService.upload(establishmentId, id, image);
         refMenuItemsService.saveImageName(fullName, id, AdminController.formatedUUid(establishmentId));
         return ResponseEntity.ok("Image saved");
     }
 
-    @GetMapping("/menu/image/{establishmentId}/{id}")
-    public void getImageById(@PathVariable UUID establishmentId,
-                             @PathVariable Long id,
+    @GetMapping("/menu/image")
+    public void getImageById(@RequestParam("establishment") UUID establishmentId,
+                             @RequestParam("id") Long id,
                              HttpServletResponse response){
         refMenuItemsService.getImageById(establishmentId, id, response);
     }
