@@ -32,9 +32,17 @@ public class MenuAdminController {
     }
 
     @GetMapping("/menu/image")
-    public void getImageById(@RequestParam("est_uuid") UUID establishmentId,
+    private void getImageById(@RequestParam("est_uuid") UUID establishmentId,
                              @RequestParam("Id") Long id,
                              HttpServletResponse response){
         refMenuItemsService.getImageById(establishmentId, id, response);
+    }
+
+    @DeleteMapping("/menu/image")
+    public ResponseEntity<?> deleteImage(@RequestParam("est_uuid") UUID establishmentId,
+                                         @RequestParam("Id") Long id){
+        String fullaName = refMenuItemsService.deleteImageById(AdminController.formatedUUid(establishmentId), id);
+        imageService.delete(fullaName, id);
+        return ResponseEntity.ok("Image deleted");
     }
 }

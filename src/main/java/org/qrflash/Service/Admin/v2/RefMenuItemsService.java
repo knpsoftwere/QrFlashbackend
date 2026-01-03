@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class RefMenuItemsService {
     private final MenuItemRepository menuItemRepository;
@@ -50,6 +50,17 @@ public class RefMenuItemsService {
 
     }
 
-    public void getImageForPage() {
+    @Transactional
+    public String deleteImageById(String database, Long productId) {
+        try{
+            Optional<MenuItemFindDTO> checked = findMenuItemById(productId, database);
+            if(checked.isPresent()) {
+                return menuItemRepository.deleteImage(productId, database);
+            }
+            throw  new ResourceNotFoundException("Image not found");
+        }catch (Exception e){
+            log.error("Delete image id error");
+            throw new RuntimeException("", e);
+        }
     }
 }

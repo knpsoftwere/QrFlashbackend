@@ -38,6 +38,16 @@ public class MenuItemRepository {
            WHERE id = ?;
            """;
 
+    private final String UPDATE_PHOTO_NULL = """
+            UPDATE menu_items
+            SET photo = NULL
+            WHERE id = ?
+            """;
+    private final String SELECT_PHTOTO_PATH = """
+            SELECT photo FROM menu_items
+            WHERE id = ?
+            """;
+
     public String getImageNameByMenuId(String database, Long id) {
         log.info("getImageNameByMenuId id={}",id);
         try(Connection connection = dynamicDatabaseService.getConnection(database);
@@ -93,5 +103,31 @@ public class MenuItemRepository {
                 rs.getLong("id"),
                 rs.getString("name")
         );
+    }
+
+    public String deleteImage(Long productId, String database) {
+        String photoPath = null;
+        try(Connection connection = dynamicDatabaseService.getConnection(database)){
+            connection.setAutoCommit(false);
+            try(PreparedStatement selectPs = connection.prepareStatement(SELECT_PHTOTO_PATH)){
+                selectPs.setLong(1, productId);
+                try(ResultSet rs = selectPs.executeQuery()){
+                    if(rs.next()){
+                        photoPath = rs.getString("photo");
+                    }
+                }
+            }
+
+            if (photoPath != null) {
+                try (PreparedStatement updatePs = connection.prepareStatement(UPDATE_PHOTO_NULL)) {
+                    updatePs.setLong(1, productId);
+                    updatePs.executeUpdate();
+                }
+            }
+            connection.commit();
+            return photoPath;
+        }catch (SQLException e){
+            throw new RuntimeException("Error delete image", e);
+        }
     }
 }

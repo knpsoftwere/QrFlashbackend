@@ -101,4 +101,23 @@ public class ImageService {
             throw  new RuntimeException("Error creating bucket", e);
         }
     }
+
+    public void delete(String fullPath, Long productId) {
+        if (fullPath != null && !fullPath.isEmpty()){
+            try{
+                String minioObjectName = fullPath.startsWith("/") ? fullPath.substring(1) : fullPath;
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(minioProperties.getBucket())
+                                .object(fullPath)
+                                .build()
+                );
+            }catch (Exception e) {
+                log.error("Failed to delete object from MinIO: {}", fullPath);
+                // Можна не кидати exception, щоб БД вже була очищена,
+                // або зробити rollback, якщо це критично
+            }
+            }
+        }
+
 }
