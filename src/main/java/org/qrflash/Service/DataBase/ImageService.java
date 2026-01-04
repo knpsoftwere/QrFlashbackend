@@ -96,7 +96,7 @@ public class ImageService {
                             .build()
             );
 
-            return url.replace("http://minio:9000", "http://13.62.51.144/qrflash-images");
+            return url.replace("http://minio:9000", minioProperties.getIpServer() + "/qrflash-images");
         }catch(Exception e){
             throw  new RuntimeException("Error creating bucket", e);
         }
