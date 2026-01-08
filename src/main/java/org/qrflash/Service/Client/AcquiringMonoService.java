@@ -2,10 +2,12 @@ package org.qrflash.Service.Client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.qrflash.DTO.Client.OrderRequest;
 import org.qrflash.Service.DataBase.DataBaseService;
 import org.qrflash.Service.Payment.MonobankPaymentService;
+import org.qrflash.properties.CustomServerProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +16,10 @@ import java.sql.*;
 
 
 @Service
+@RequiredArgsConstructor
 public class AcquiringMonoService {
-    @Autowired
-    private DataBaseService dataBaseService; // Сервіс для роботи з базою даних
-    @Autowired
-    private MonobankPaymentService monobankPaymentService;  //Сервіс для створення запиту на monobank
+    private final DataBaseService dataBaseService; // Сервіс для роботи з базою даних
+    private final MonobankPaymentService monobankPaymentService;  //Сервіс для створення запиту на monobank
 
     public String createOrder(String databaseName, OrderRequest orderRequest) throws JsonProcessingException {
         // Створюємо запит на вставку замовлення в базу

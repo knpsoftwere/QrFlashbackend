@@ -29,6 +29,7 @@ jwt:
 custom:
   datasource:
     urlConn: "jdbc:postgresql://dataBase:5432/%s"
+    serverIpAddress: "http://13.48.55.202"
 
 minio:
   url: ${MINIO_ROOT_URL}

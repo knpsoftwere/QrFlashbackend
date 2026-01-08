@@ -24,12 +24,13 @@ public class OrderController {
     @Autowired
     private MonobankPaymentService monobankPaymentService;
 
-    private String formatedUUid(UUID establishmentId){
-        return "est_" + establishmentId.toString().replace("-", "_");
+    private String formatedUUid(String establishmentId){
+        return "est_" + establishmentId.replace("-", "_");
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<?> createOrder(@RequestHeader UUID Uuid, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestParam("est_uuid") String Uuid,
+                                         @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
             String pageUrl = acquiringMonoService.createOrder(formatedUUid(Uuid), orderRequest);
@@ -40,7 +41,8 @@ public class OrderController {
         }
     }
     @PutMapping("/setting")
-    public ResponseEntity<?> addToken(@RequestHeader UUID Uuid, @RequestBody TokenRequest tokenRequest){
+    public ResponseEntity<?> addToken(@RequestParam("est_uuid") String Uuid,
+                                      @RequestBody TokenRequest tokenRequest){
         try{
             String token = tokenRequest.getToken();
             if (token == null || token.isEmpty()) {

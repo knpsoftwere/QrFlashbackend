@@ -1,8 +1,10 @@
 package org.qrflash.Service.Payment;
 
+import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.qrflash.Service.DataBase.DataBaseService;
+import org.qrflash.properties.CustomServerProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -13,7 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class MonobankPaymentService {
+    private final CustomServerProperties cSP;
     private static final String MONOBANK_API_URL_POST_CREATE_TRANSACTION = "https://api.monobank.ua/api/merchant/invoice/create";
     private static final String MONOBANK_API_URL_GET_PUB_KEY = "https://api.monobank.ua/api/merchant/pubkey";
     //https://api.monobank.ua/docs/acquiring.html#/paths/~1api~1merchant~1invoice~1create/post - MonobankAPi
@@ -31,14 +35,14 @@ public class MonobankPaymentService {
             //merchantPaymInfo.put("comment", databaseName);
 
             //todo
-            String redirectUrl = "https://qrflash.online/client?est_uuid=" + databaseName.replace("est_", "").replace("_", "-") + "&table=" + qrCode.toLowerCase();
+            String redirectUrl = cSP.getIpServer() + "/client?est_uuid=" + databaseName.replace("est_", "").replace("_", "-") + "&table=" + qrCode.toLowerCase();
             // Створення запиту до API Monobank
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("amount", totalAmount); // Сума
             requestBody.put("ccy", 980);
             requestBody.put("merchantPaymInfo", merchantPaymInfo);
             requestBody.put("redirectUrl", redirectUrl);
-            requestBody.put("webHookUrl", "https://api.qrflash.online/acquiring/webhook");
+            requestBody.put("webHookUrl", cSP.getIpServer() + "/api/acquiring/webhook");
             //requestBody.put("order_items", orderItemsJson); // Список товарів у JSON
 
             RestTemplate restTemplate = new RestTemplate();
