@@ -37,7 +37,7 @@ public class OrderController {
             // Повертаємо URL для оплати клієнту
             return ResponseEntity.ok(Map.of("pageUrl", pageUrl));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "createOrder: Помилка створення замовлення"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "createOrder: Помилка створення замовлення" + e.getMessage()));
         }
     }
     @PutMapping("/setting")
