@@ -30,6 +30,7 @@ public class MonobankPaymentService {
             merchantPaymInfo.put("destination", "Призначення платежу");
             //merchantPaymInfo.put("comment", databaseName);
 
+            //todo
             String redirectUrl = "https://qrflash.online/client?est_uuid=" + databaseName.replace("est_", "").replace("_", "-") + "&table=" + qrCode.toLowerCase();
             // Створення запиту до API Monobank
             Map<String, Object> requestBody = new HashMap<>();

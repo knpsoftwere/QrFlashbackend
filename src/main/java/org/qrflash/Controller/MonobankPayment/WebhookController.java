@@ -25,7 +25,7 @@ import java.sql.SQLException;
 import java.util.Base64;
 
 @RestController
-@RequestMapping("/acquiring")
+@RequestMapping("/api/acquiring")
 
 public class WebhookController {
     private WebhookService webhookService;
