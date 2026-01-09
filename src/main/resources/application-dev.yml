@@ -2,7 +2,7 @@ spring:
   application:
     name: DevQrFlash
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    url: jdbc:postgresql://51.21.2.126:5432/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -18,7 +18,7 @@ spring:
     enabled: true
 
 tenant:
-  db-url-template: "jdbc:postgresql://localhost:5432/%s"
+  db-url-template: "jdbc:postgresql://51.21.2.126:5432/%s"
 
 server:
   port: 8081
@@ -29,7 +29,7 @@ jwt:
 
 custom:
   datasource:
-    urlConn: "jdbc:postgresql://localhost:5432/%s"
+    urlConn: "jdbc:postgresql://51.21.2.126:5432/%s"
 
 minio:
   url: ${MINIO_URL}
