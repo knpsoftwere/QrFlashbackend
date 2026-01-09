@@ -403,7 +403,7 @@ public class AdminController {
 
     //Запити по оплаті
     @GetMapping("/payments")
-    public ResponseEntity<?> getPayments(@RequestHeader("Uuid") UUID establishmentId){
+    public ResponseEntity<?> getPayments(@RequestParam("est_uuid") UUID establishmentId){
         try{
             List<Map<String, Object>> paymentMethod = paymentService.getPaymentMethods(formatedUUid(establishmentId));
             return ResponseEntity.ok(Map.of("paymentMethod", paymentMethod));
