@@ -93,4 +93,8 @@ public class EstablishmentsService {
                 .orElseThrow(() -> new RuntimeException("Заклад не знайдено для користувача"));
     }
 
+    public void editEstablishmentLanguage(UUID establishmentId, CompanyLanguage language) {
+        establishmentsRepository.updateLanguageByUuid(establishmentId, language.getCode());
+    }
+
 }

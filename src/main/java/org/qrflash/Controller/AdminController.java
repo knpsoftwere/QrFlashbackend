@@ -10,6 +10,7 @@ import org.qrflash.DTO.Admin.MenuDTO.MenuItemDTO;
 import org.qrflash.DTO.Admin.MenuDTO.MenuItemUpdateDTO;
 import org.qrflash.DTO.Admin.establishment.EstablishmentConfigDTO;
 import org.qrflash.DTO.AppError;
+import org.qrflash.DTO.CompanyLanguage;
 import org.qrflash.Entity.CategoryEntity;
 import org.qrflash.Entity.MenuItemEntity;
 import org.qrflash.Entity.TagEntity;
@@ -20,6 +21,7 @@ import org.qrflash.Service.Admin.PaymentService;
 import org.qrflash.Service.Admin.TagService;
 import org.qrflash.Service.Client.ConfigService;
 import org.qrflash.Service.Admin.MenuItemsService;
+import org.qrflash.Service.Establishment.EstablishmentsService;
 import org.qrflash.Source.Multi_tenancy.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +45,7 @@ public class AdminController {
     private final CategoryService categoryService;
     private final JwtUtil jwtUtil;
     private final PaymentService paymentService;
+    private final EstablishmentsService  establishmentsService;
 
     public static String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
@@ -398,6 +401,17 @@ public class AdminController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Помилка отримання персональної інформації"));
+        }
+    }
+
+    @PostMapping("/editLanguage")
+    public ResponseEntity<?> editLanguage(@RequestParam("est_uuid") UUID estb,
+                                          @RequestParam("lang") CompanyLanguage lang){
+        try{
+            establishmentsService.editEstablishmentLanguage(estb, lang);
+            return ResponseEntity.ok("");
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("editLanguage: " + e.getMessage());
         }
     }
 
