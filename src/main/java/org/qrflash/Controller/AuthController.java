@@ -1,5 +1,6 @@
 package org.qrflash.Controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.qrflash.DTO.*;
 import org.qrflash.Entity.EstablishmentsEntity;
@@ -32,7 +33,7 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> createNewUser (@RequestBody RegistrationUserDTO registrationUserDTO) {
+    public ResponseEntity<?> createNewUser (@Valid @RequestBody RegistrationUserDTO registrationUserDTO) {
         //todo Винести в сервіс
         //todo Перевести логінацію на sf4j
         //Перевірна, чи існує користувач із таким номером телефону
@@ -48,15 +49,11 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(registrationUserDTO.getPassword()));
         userService.createNewUser(user);
 
-        //Генерація токена
-        String token = jwtUtil.generateToken(registrationUserDTO.getPhoneNumber());
-
         //Створення бази даних (закладу) для нового користувача
-        String establishmentUuid;
+        EstablishmentsEntity establishment;
         try{
             System.out.println(getCurrentTimestamp() + " - Створюється база данних для користувача...");
-            EstablishmentsEntity establishment = establishmentsService.createEstablishmentForUser(user.getId());
-            establishmentUuid = establishment.getUuid().toString();
+            establishment = establishmentsService.createEstablishmentForUser(user.getId(), registrationUserDTO.getLanguage());
             System.out.println(getCurrentTimestamp() +" - База успішно створення");
         }catch (Exception e){
             System.err.println(getCurrentTimestamp() +" - Помилка створення бази даних\n " + e);
@@ -65,7 +62,10 @@ public class AuthController {
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
-        JwtResponse response = new JwtResponse(token, establishmentUuid);
+        //Генерація токена
+        String token = jwtUtil.generateToken(registrationUserDTO.getPhoneNumber(),
+                establishment.getLanguage());
+        JwtResponse response = new JwtResponse(token, establishment.getUuid().toString());
         return ResponseEntity.ok(response);
     }
 
@@ -82,11 +82,12 @@ public class AuthController {
             return new ResponseEntity<>(new AppError(HttpStatus.UNAUTHORIZED.value(), "Не правильний логін чи пароль"), HttpStatus.UNAUTHORIZED);
         }
         UserDetails userDetails = userService.loadUserByUsername(request.getPhoneNumber());
-        String token = jwtUtil.generateToken(userDetails.getUsername());
+        EstablishmentsEntity establishmentsEntity = establishmentsService.getEstablishmentUuidForUser(request.getPhoneNumber());
 
-        String establishmentUuid = establishmentsService.getEstablishmentUuidForUser(request.getPhoneNumber());
+        String token = jwtUtil.generateToken(userDetails.getUsername(), establishmentsEntity.getLanguage());
 
-        JwtResponse response = new JwtResponse(token, establishmentUuid);
+
+        JwtResponse response = new JwtResponse(token, establishmentsEntity.getUuid().toString());
         return ResponseEntity.ok(response);
     }
 

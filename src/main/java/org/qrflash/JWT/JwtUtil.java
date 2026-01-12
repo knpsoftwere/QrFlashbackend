@@ -1,6 +1,7 @@
 package org.qrflash.JWT;
 
 import io.jsonwebtoken.*;
+import org.qrflash.DTO.CompanyLanguage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +13,23 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    public String generateToken(String phoneNumber) {
+    public String generateToken(String phoneNumber, String language) {
         return Jwts.builder()
                 .setSubject(phoneNumber)
+                .claim("lang", language)
+                .setIssuedAt(new Date())
+                //Налаштування токена на 10 годин
+                //.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                //Налаштування токена на 15 хв
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 3))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
+
+    public String generateToken(String phoneNumber, CompanyLanguage language) {
+        return Jwts.builder()
+                .setSubject(phoneNumber)
+                .claim("lang", language)
                 .setIssuedAt(new Date())
                 //Налаштування токена на 10 годин
                 //.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))

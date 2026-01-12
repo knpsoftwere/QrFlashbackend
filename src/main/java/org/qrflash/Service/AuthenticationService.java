@@ -14,10 +14,10 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public String authenticateUser(String phoneNumber, String password) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(phoneNumber, password)
-        );
-        return jwtUtil.generateToken(phoneNumber);
-    }
+//    public String authenticateUser(String phoneNumber, String password) {
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(phoneNumber, password)
+//        );
+//        return jwtUtil.generateToken(phoneNumber);
+//    }
 }

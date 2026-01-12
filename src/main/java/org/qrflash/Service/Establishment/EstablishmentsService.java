@@ -1,6 +1,7 @@
 package org.qrflash.Service.Establishment;
 
 import lombok.RequiredArgsConstructor;
+import org.qrflash.DTO.CompanyLanguage;
 import org.qrflash.Entity.EstablishmentsEntity;
 import org.qrflash.Entity.UserEntity;
 import org.qrflash.Repository.EstablishmentsRepository;
@@ -37,13 +38,13 @@ public class EstablishmentsService {
         return establishmentsRepository.save(establishment);
     }
 
-    public EstablishmentsEntity createEstablishmentForUser(Long adminId) {
+    public EstablishmentsEntity createEstablishmentForUser(Long adminId, CompanyLanguage language) {
         UserEntity admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Користувач не знайдений"));
         //Створюємо новий заклад
         EstablishmentsEntity establishment = new EstablishmentsEntity();
         establishment.setName("Заклад 1");
-        establishment.setLanguage("ua");
+        establishment.setLanguage(language.getCode());
         establishment.setCreatedAt(LocalDateTime.now());
         establishment.setStatus("active");
 
@@ -84,14 +85,12 @@ public class EstablishmentsService {
         return establishment;
     }
 
-    public String getEstablishmentUuidForUser(String phoneNumber) {
+    public EstablishmentsEntity getEstablishmentUuidForUser(String phoneNumber) {
         UserEntity user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("Користувач не знайдений"));
 
-        EstablishmentsEntity establishment = establishmentsRepository.findByAdminId(user.getId())
+        return establishmentsRepository.findByAdminId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Заклад не знайдено для користувача"));
-
-        return establishment.getUuid().toString();
     }
 
 }
