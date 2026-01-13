@@ -69,7 +69,7 @@ public class DataBaseService {
             statement.executeUpdate(createTableSQL);
 
         } catch (SQLException e) {
-            throw new RuntimeException("createMenuItemTable: Помилка створення MenuItemTable: "+ e);
+            throw new RuntimeException("createMenuItemTable: Error create MenuItemTable: "+ e);
         }
     }
 
@@ -78,7 +78,7 @@ public class DataBaseService {
         String sql = """
         CREATE TABLE opening_hours (
             id SERIAL PRIMARY KEY,
-            day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Понеділок', 'Вівторок', 'Середа', 'Четверг', 'П`ятниця', 'Субота', 'Неділя')),
+            day VARCHAR(10) NOT NULL UNIQUE CHECK (day IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
             work_hours JSONB DEFAULT '{}',
             breaks JSONB DEFAULT '[]',
             status VARCHAR(10) CHECK (status IN ('open', 'closed', 'paused')) DEFAULT 'closed',
@@ -99,11 +99,10 @@ public class DataBaseService {
 
     //Створення для таблиці початкових меню
     public void insertDefaultMenuItems(String databaseName) {
-        System.out.println("insertDefaultMenuItems: Запустився");
         String insertDefaultItemsSQL = """
         INSERT INTO menu_items (name, photo, description, unit, item_type, price, category_id)
         VALUES 
-        ('Товар 1', 'example.png', 'Стандартний товар для тесту', 'kg', 'warh', 50.0, 1);
+        ('Product 1', 'example.png', 'Basic product', 'kg', 'warh', 50.0, 1);
         """;
 
         try (Connection connection = DriverManager.getConnection(String.format(DB_URL, databaseName), DB_USERNAME, DB_PASSWORD);
@@ -123,13 +122,13 @@ public class DataBaseService {
         String sql = """
         INSERT INTO opening_hours (day, work_hours, breaks)
         VALUES
-        ('Понеділок', '{}', '[]'),
-        ('Вівторок', '{}', '[]'),
-        ('Середа', '{}', '[]'),
-        ('Четверг', '{}', '[]'),
-        ('П`ятниця', '{}', '[]'),
-        ('Субота', '{}', '[]'),
-        ('Неділя', '{}', '[]')
+        ('Monday', '{}', '[]'),
+        ('Tuesday', '{}', '[]'),
+        ('Wednesday', '{}', '[]'),
+        ('Thursday', '{}', '[]'),
+        ('Friday', '{}', '[]'),
+        ('Saturday', '{}', '[]'),
+        ('Sunday', '{}', '[]')
         ON CONFLICT (day) DO NOTHING;
     """;
 
@@ -174,7 +173,7 @@ public class DataBaseService {
         System.out.println("insertDefaultConfigData: Запустився");
         String establishmentPropertiesJson = """
         {
-          "name": "Мій заклад",
+          "name": "My establishment",
           "address": "",
           "description": "",
           "contact_info": []
@@ -267,7 +266,7 @@ public class DataBaseService {
             System.out.println("recreateDatabase: База даних успішно пересоздана та ініціалізована!");
 
         } catch (Exception e) {
-            throw new RuntimeException("recreateDatabase: Помилка під час пересоздання бази даних: " + databaseName, e);
+            throw new RuntimeException("recreateDatabase: Error recreated database: " + databaseName, e);
         }
     }
 
@@ -290,7 +289,7 @@ public class DataBaseService {
             System.out.println("createTagsTable: Таблиця `tags` успішно створена в базі");
 
         } catch (SQLException e) {
-            throw new RuntimeException("createTagsTable: Помилка створення таблиці `tags`", e);
+            throw new RuntimeException("createTagsTable: Error create table `tags`", e);
         }
     }
 
@@ -321,9 +320,9 @@ public class DataBaseService {
         String insertTagsSQL = """
         INSERT INTO tags (name, description, emoji)
         VALUES 
-            ('Гостре', 'Страви з гострим перцем', '🌶️'),
-            ('Алергени', 'Містить потенційні алергени', '⚠️'),
-            ('Алкоголь', 'Містить алкоголь', '🍷')
+            ('Spicy', 'Dishes with hot peppers', '🌶️'),
+            ('Allergens', 'Contains potential allergens', '⚠️'),
+            ('Alcohol', 'Contains alcohol', '🍷')
         ON CONFLICT (name) DO NOTHING;
     """;
 
@@ -364,7 +363,7 @@ public class DataBaseService {
         System.out.println("insertDefaultCategories: Запустився");
         String insertCategoriesSQL = """
             INSERT INTO categories (name, description, image_url)
-            VALUES ('Категорія', 'Стандартна категорія', 'https://cdn.example.com/images/drinks.jpg')
+            VALUES ('Categories', 'Default categories', '.ex')
             ON CONFLICT (name) DO NOTHING;
         """;
 
