@@ -11,10 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PaymentService {
@@ -100,6 +97,102 @@ public class PaymentService {
             System.out.println("Статус активності оновлено для ID: " + id);
         } catch (SQLException e) {
             throw new RuntimeException("Помилка оновлення статусу активності для ID: " + id, e);
+        }
+    }
+
+    public List<Map<String, Object>> getAllOrders(String databaseName) {
+        String query = """
+                SELECT 
+                    id as id,
+                    total_amount AS total_amount,
+                    currency as currency,
+                    status as status,
+                    order_items as order_items,
+                    created_at as created_at
+                FROM
+                    orders
+                """;
+
+        try(Connection connection = dataBaseService.getConnection(databaseName);
+            PreparedStatement ps = connection.prepareStatement(query);
+            ResultSet rs = ps.executeQuery()){
+            List<Map<String, Object>> orders = new ArrayList<>();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            while (rs.next()) {
+                Map<String, Object> orderObject = new HashMap<>();
+                orderObject.put("order_id", rs.getInt("id"));
+                orderObject.put("total_order_amount", rs.getLong("total_amount"));
+                orderObject.put("currency", rs.getString("currency"));
+                orderObject.put("status", rs.getString("status"));
+                orderObject.put("createdAt", rs.getTimestamp("created_at"));
+
+                String orderItemsJSON = rs.getString("order_items");
+                if (orderItemsJSON != null && !orderItemsJSON.isEmpty()) {
+                    // Змінюємо Map на List
+                    List<Map<String, Object>> settingsList = objectMapper.readValue(orderItemsJSON, new TypeReference<List<Map<String, Object>>>() {});
+                    orderObject.put("orderItems", settingsList);
+                } else {
+                    orderObject.put("orderItems", Collections.emptyList());
+                }
+
+                orders.add(orderObject);
+            }
+            return orders;
+        }catch (Exception e){
+            throw new RuntimeException("getAllOrders: " + e.getMessage(), e);
+        }
+    }
+
+    public Map<String, Object> getOrder(String databaseName, long id) {
+        String query = """
+                SELECT 
+                    id as id,
+                    total_amount AS total_amount,
+                    currency as currency,
+                    status as status,
+                    order_items as order_items,
+                    created_at as created_at
+                FROM
+                    orders
+                WHERE id = ? ;
+                """;
+
+        try (Connection connection = dataBaseService.getConnection(databaseName);
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            // Встановлюємо ID у запит
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                if (rs.next()) { // Використовуємо if замість while, бо очікуємо один рядок
+                    Map<String, Object> orderObject = new HashMap<>();
+                    orderObject.put("order_id", rs.getLong("id"));
+                    orderObject.put("total_order_amount", rs.getDouble("total_amount"));
+                    orderObject.put("currency", rs.getString("currency"));
+                    orderObject.put("status", rs.getString("status"));
+                    orderObject.put("createdAt", rs.getTimestamp("created_at"));
+
+                    String orderItemsJSON = rs.getString("order_items");
+                    if (orderItemsJSON != null && !orderItemsJSON.isEmpty()) {
+                        // Виправлено: десеріалізація у список мап
+                        List<Map<String, Object>> itemsList = objectMapper.readValue(
+                                orderItemsJSON,
+                                new TypeReference<List<Map<String, Object>>>() {}
+                        );
+                        orderObject.put("orderItems", itemsList);
+                    } else {
+                        orderObject.put("orderItems", Collections.emptyList());
+                    }
+
+                    return orderObject;
+                }
+                return null; // Якщо замовлення не знайдено
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("getOrder error (id=" + id + "): " + e.getMessage(), e);
         }
     }
 }

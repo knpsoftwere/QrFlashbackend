@@ -439,4 +439,17 @@ public class AdminController {
                     .body("Помилка змінення статусу активності");
         }
     }
+
+    @GetMapping("/getAllOrders")
+    public ResponseEntity<?>  getAllOrders(@RequestParam("est_uuid") UUID establishmentId){
+        List<Map<String, Object>> allOrders = paymentService.getAllOrders(formatedUUid(establishmentId));
+        return ResponseEntity.ok(Map.of("allOrders", allOrders));
+    }
+
+    @GetMapping("/getOrder")
+    public ResponseEntity<?>  getAllOrders(@RequestParam("est_uuid") UUID establishmentId,
+                                           @RequestParam("order_id") Long oder_id){
+        Map<String, Object> order = paymentService.getOrder(formatedUUid(establishmentId), oder_id);
+        return ResponseEntity.ok(Map.of("order", order));
+    }
 }
