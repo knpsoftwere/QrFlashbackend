@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.sql.*;
+import java.util.Map;
 
 
 @Service
@@ -21,7 +22,7 @@ public class AcquiringMonoService {
     private final DataBaseService dataBaseService; // Сервіс для роботи з базою даних
     private final MonobankPaymentService monobankPaymentService;  //Сервіс для створення запиту на monobank
 
-    public String createOrder(String databaseName, OrderRequest orderRequest) throws JsonProcessingException {
+    public Map<String, Object> createOrder(String databaseName, OrderRequest orderRequest) throws JsonProcessingException {
         // Створюємо запит на вставку замовлення в базу
         String sql = "INSERT INTO orders (currency, order_items, total_amount) VALUES (?, ?::jsonb, ?)";
 
@@ -43,13 +44,13 @@ public class AcquiringMonoService {
                 long orderId = rs.getLong(1);
                 //Створення рахунку банку
                 long totalAmount = (long) (orderRequest.getTotalAmount() * 100);
-                JSONObject jsonObject = monobankPaymentService.createInvoice(totalAmount, databaseName, orderRequest.getQrCode());
+                JSONObject jsonObject = monobankPaymentService.createInvoice(totalAmount, databaseName, orderRequest.getQrCode(), orderId);
                 String invoiceId = jsonObject.getString("invoiceId");
                 String pageUrl = jsonObject.getString("pageUrl");
 
                 //Зберігаємо дані в таблицю "payments"
                 savePaymentDetails(invoiceId, pageUrl, orderId, orderRequest.getTotalAmount(), "UAH", databaseName);
-                return pageUrl;
+                return Map.of("pageUrl", pageUrl, "order_id", orderId);
             } else {
                 throw new SQLException("createOrder: Помилка збереження замовлення");
             }

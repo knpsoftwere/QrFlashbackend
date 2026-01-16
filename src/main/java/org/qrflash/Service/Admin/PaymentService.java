@@ -195,4 +195,9 @@ public class PaymentService {
             throw new RuntimeException("getOrder error (id=" + id + "): " + e.getMessage(), e);
         }
     }
+
+    public Object checkOrder(String databaseName, Long orderId) {
+        Map<String, Object> order = getOrder(databaseName, orderId);
+        return order.get("status");
+    }
 }

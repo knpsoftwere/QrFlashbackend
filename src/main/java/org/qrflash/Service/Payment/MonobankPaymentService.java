@@ -26,7 +26,7 @@ public class MonobankPaymentService {
     private DataBaseService dataBaseService;
 
     //Створюємо запит на API monobank для створення платежу
-    public JSONObject createInvoice(long totalAmount, String databaseName, String qrCode) {
+    public JSONObject createInvoice(long totalAmount, String databaseName, String qrCode, Long order_id) {
         String API_KEY = getToken(databaseName);
         try {
             HashMap merchantPaymInfo = new HashMap();
@@ -34,8 +34,7 @@ public class MonobankPaymentService {
             merchantPaymInfo.put("destination", "Призначення платежу");
             //merchantPaymInfo.put("comment", databaseName);
 
-            //todo
-            String redirectUrl = cSP.getIpServer() + "/client?est_uuid=" + databaseName.replace("est_", "").replace("_", "-") + "&table=" + qrCode.toLowerCase();
+            String redirectUrl = cSP.getIpServer() + "/client?est_uuid=" + databaseName.replace("est_", "").replace("_", "-") + "&table=" + qrCode.toLowerCase() + "&order_id=" + order_id;
             // Створення запиту до API Monobank
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("amount", totalAmount); // Сума

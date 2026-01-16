@@ -3,6 +3,7 @@ package org.qrflash.Controller.MonobankPayment;
 
 import org.qrflash.DTO.Client.OrderRequest;
 import org.qrflash.DTO.Client.TokenRequest;
+import org.qrflash.Service.Admin.PaymentService;
 import org.qrflash.Service.Client.AcquiringMonoService;
 import org.qrflash.Service.Payment.MonobankPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class OrderController {
     private AcquiringMonoService acquiringMonoService;
     @Autowired
     private MonobankPaymentService monobankPaymentService;
+    @Autowired
+    private PaymentService paymentService;
 
     private String formatedUUid(UUID establishmentId){
         return "est_" + establishmentId.toString().replace("-", "_");
@@ -33,9 +36,9 @@ public class OrderController {
                                          @RequestBody OrderRequest orderRequest) {
         try {
             // Викликаємо сервіс для створення замовлення
-            String pageUrl = acquiringMonoService.createOrder(formatedUUid(Uuid), orderRequest);
+            Map<String, Object> page = acquiringMonoService.createOrder(formatedUUid(Uuid), orderRequest);
             // Повертаємо URL для оплати клієнту
-            return ResponseEntity.ok(Map.of("pageUrl", pageUrl));
+            return ResponseEntity.ok(page);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "createOrder: Помилка створення замовлення" + e.getMessage()));
         }
@@ -54,5 +57,12 @@ public class OrderController {
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Помилка налаштування оплати."));
         }
+    }
+
+    @GetMapping("/checkOrder")
+    public ResponseEntity<?> checkOrder(@RequestParam("est_uuid") UUID uuid,
+                                        @RequestParam("order_id") Long order_id){
+        Object result = paymentService.checkOrder(formatedUUid(uuid), order_id);
+        return ResponseEntity.ok(Map.of("statusOrder", result));
     }
 }

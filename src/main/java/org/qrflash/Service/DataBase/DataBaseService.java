@@ -187,8 +187,8 @@ public class DataBaseService {
           "schemes": [
             {
               "name": "Default",
-              "primary_color": "#FF5733",
-              "secondary_color": "#333333",
+              "primary_color": "#ca1414",
+              "secondary_color": "#c8723d",
               "text_color": "#FFFFFF",
               "background_url": "https://cdn.example.com/default_background.jpg"
             }
